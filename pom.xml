@@ -65,6 +65,7 @@
     </ciManagement>
 
     <properties>
+
         <main-class>CCC.Colocalization_by_Cross_Correlation</main-class>
         <license.licenseName>cc0</license.licenseName>
         <license.copyrightOwners>N/A</license.copyrightOwners>
@@ -73,8 +74,8 @@
 
     <repositories>
         <repository>
-            <id>org.scijava</id>
-            <url>https://maven.scijava.org/content/repositories/public/</url>
+            <id>scijava.public</id>
+            <url>https://maven.scijava.org/content/groups/public</url>
         </repository>
     </repositories>
 
