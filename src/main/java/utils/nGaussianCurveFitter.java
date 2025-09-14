@@ -16,20 +16,13 @@
  */
 package utils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.math3.analysis.function.Gaussian;
-import org.apache.commons.math3.exception.NotStrictlyPositiveException;
-import org.apache.commons.math3.exception.NullArgumentException;
-import org.apache.commons.math3.exception.NumberIsTooSmallException;
-import org.apache.commons.math3.exception.OutOfRangeException;
-import org.apache.commons.math3.exception.ZeroException;
+import org.apache.commons.math3.exception.*;
 import org.apache.commons.math3.exception.util.LocalizedFormats;
 import org.apache.commons.math3.fitting.AbstractCurveFitter;
+import org.apache.commons.math3.fitting.GaussianCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
@@ -73,28 +66,13 @@ import org.apache.commons.math3.util.FastMath;
  */
 public class nGaussianCurveFitter extends AbstractCurveFitter {
     /** Parametric function to be fitted. */
-    private static final Gaussian.Parametric FUNCTION = new Gaussian.Parametric() {
+    private static final nGaussian.Parametric FUNCTION = new nGaussian.Parametric() {
         /** {@inheritDoc} */
         @Override
         public double value(double x, double ... p) {
             double v = Double.POSITIVE_INFINITY;
-
-            int nGauss = (p.length/3);
-
-            double [][] pass = new double[nGauss][3];
-
-            int pAccessor = 0;
-            for (int i = 0; i < nGauss; ++i) {
-                pass[i][0] = p[pAccessor++];
-                pass[i][1] = p[pAccessor++];
-                pass[i][2] = p[pAccessor++];
-            }
             try {
-                double sumV = 0;
-                for (int i = 0; i < nGauss; i++) {
-                    sumV += super.value(x, pass[i]);
-                }
-                v = sumV;
+                v = super.value(x, p);
             } catch (NotStrictlyPositiveException e) { // NOPMD
                 // Do nothing.
             }
@@ -102,9 +80,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
         }
 
         /** {@inheritDoc} */
-        //@Override
-
-        //todo: adjust this to nGauss
+        @Override
         public double[] gradient(double x, double ... p) {
             double[] v = { Double.POSITIVE_INFINITY,
                     Double.POSITIVE_INFINITY,
@@ -170,7 +146,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
      * @param newCurveCount number of Gaussian curves to fit.
      * @return a new instance.
      */
-    public nGaussianCurveFitter withStartPoint(int newCurveCount) {
+    public nGaussianCurveFitter withCount(int newCurveCount) {
         return new nGaussianCurveFitter(initialGuess,
                 curveCount,
                 maxIter);
@@ -209,7 +185,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
         final double[] startPoint = initialGuess != null ?
                 initialGuess :
                 // Compute estimation.
-                new ParameterGuesser(observations).guess();
+                new ParameterGuesser(observations, curveCount).guess();
 
         // Return a new least squares problem set up to fit a Gaussian curve to the
         // observed points.
@@ -230,12 +206,21 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
      * based on the specified observed points.
      */
     public static class ParameterGuesser {
-        /** Normalization factor. */
-        private final double norm;
-        /** Mean. */
-        private final double mean;
-        /** Standard deviation. */
-        private final double sigma;
+        //Every triplet is ordered Normalization factor, mean and Standard Deviation
+        private double[] guess;
+
+        private int curveCount;
+
+
+
+//        /** Normalization factor. */
+//        private final double norm;
+//        /** Mean. */
+//        private final double mean;
+//        /** Standard deviation. */
+//        private final double sigma;
+//
+
 
         /**
          * Constructs instance with the specified observed points.
@@ -247,20 +232,19 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
          * @throws NumberIsTooSmallException if there are less than 3
          * observations.
          */
-        public ParameterGuesser(Collection<WeightedObservedPoint> observations) {
+        public ParameterGuesser(Collection<WeightedObservedPoint> observations, int curveCount) {
             if (observations == null) {
                 throw new NullArgumentException(LocalizedFormats.INPUT_ARRAY);
             }
             if (observations.size() < 3) {
                 throw new NumberIsTooSmallException(observations.size(), 3, true);
             }
+            if (curveCount < 1){
+                throw new NumberIsTooSmallException(curveCount, 1, true);
+            }
 
             final List<WeightedObservedPoint> sorted = sortObservations(observations);
-            final double[] params = basicGuess(sorted.toArray(new WeightedObservedPoint[0]));
-
-            norm = params[0];
-            mean = params[1];
-            sigma = params[2];
+            guess = basicGuess(sorted.toArray(new WeightedObservedPoint[0]), curveCount);
         }
 
         /**
@@ -274,7 +258,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
          * </ul>
          */
         public double[] guess() {
-            return new double[] { norm, mean, sigma };
+            return guess.clone();
         }
 
         /**
@@ -335,24 +319,31 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
          * @return the guessed parameters (normalization factor, mean and
          * sigma).
          */
-        private double[] basicGuess(WeightedObservedPoint[] points) {
-            final int maxYIdx = findMaxY(points);
-            final double n = points[maxYIdx].getY();
-            final double m = points[maxYIdx].getX();
+        private double[] basicGuess(WeightedObservedPoint[] points, int curveCount) {
 
-            double fwhmApprox;
-            try {
-                final double halfY = n + ((m - n) / 2);
-                final double fwhmX1 = interpolateXAtY(points, maxYIdx, -1, halfY);
-                final double fwhmX2 = interpolateXAtY(points, maxYIdx, 1, halfY);
-                fwhmApprox = fwhmX2 - fwhmX1;
-            } catch (OutOfRangeException e) {
-                // TODO: Exceptions should not be used for flow control.
-                fwhmApprox = points[points.length - 1].getX() - points[0].getX();
+            double[] guess = new double[curveCount*3];
+            WeightedObservedPoint[] workingList = points;
+            double [] output = null;
+
+            for (int i = 0; i < curveCount; ++i) {
+                int offset = curveCount * 3;
+
+                /*This is going to take forever and seems crazy, but the basic method I tried first would not
+                work in every case. Specifically, it would not work with overlapping Gaussians with a small+narrow
+                 on top of a big+broad.
+                 */
+                try{
+                    output =  GaussianCurveFitter.create().withMaxIterations(10).fit(Arrays.asList(points));
+                }
+                catch(TooManyIterationsException ignored){}
+
+                guess[offset] = output[0];
+                guess[offset + 1] = output[1];
+                guess[offset + 2] = output[2];
+
+                workingList = subtractGaussian(workingList, new Gaussian(output[0],output[1],output[2]));
             }
-            final double s = fwhmApprox / (2 * FastMath.sqrt(2 * FastMath.log(2)));
-
-            return new double[] { n, m, s };
+            return guess;
         }
 
         /**
@@ -467,6 +458,16 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
                                   double boundary2) {
             return (value >= boundary1 && value <= boundary2) ||
                     (value >= boundary2 && value <= boundary1);
+        }
+        private WeightedObservedPoint[] subtractGaussian(WeightedObservedPoint[] points, Gaussian gaussian){
+            WeightedObservedPoint[] returnList = new WeightedObservedPoint[points.length];
+
+            for (int i = 0; i < points.length; i++) {
+                returnList[i] = new WeightedObservedPoint(points[i].getWeight(),
+                        points[i].getX(),
+                        points[i].getY()- gaussian.value(points[i].getX()));
+            }
+            return returnList;
         }
     }
 }

@@ -186,7 +186,9 @@ public class RadialProfiler {
 
         double [] output = null;
         try{
-            output =  GaussianCurveFitter.create().withMaxIterations(100).fit(obs.toList());
+            //todo: simple test, change to nGaussianCurveFitter and put in curveCount of 2, then print output
+            nGaussianCurveFitter curveFitter = nGaussianCurveFitter.create();
+            output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
         }
         catch(TooManyIterationsException ignored){}
 

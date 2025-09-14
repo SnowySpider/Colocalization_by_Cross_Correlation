@@ -93,31 +93,7 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
                 throws NullArgumentException,
                 DimensionMismatchException,
                 NotStrictlyPositiveException {
-            validateParameters(param);
-            double v = Double.POSITIVE_INFINITY;
-
-            int nGauss = (param.length/3);
-
-            double [][] pass = new double[nGauss][3];
-
-            int pAccessor = 0;
-            for (int i = 0; i < nGauss; ++i) {
-                pass[i][0] = param[pAccessor++];
-                pass[i][1] = param[pAccessor++];
-                pass[i][2] = param[pAccessor++];
-            }
-            try {
-                double sumV = 0;
-                for (int i = 0; i < nGauss; i++) {
-                    final double diff = x - pass[i][1];
-                    final double i2s2 = 1 / (2 * pass[i][2] * pass[i][2]);
-                    sumV += nGaussian.value(diff, pass[i][0], i2s2);
-                }
-                v = sumV;
-            } catch (NotStrictlyPositiveException e) { // NOPMD
-                // Do nothing.
-            }
-            return v;
+            return nGaussian.value(x, param);
         }
 
         /**
@@ -142,18 +118,21 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
 
             //returned double[] should match incoming param number! yay!
 
+            double [] gradients = new double[param.length];
 
+            //This treats each gaussian separately, not sure if that's correct
+            for (int i = 0; i < param.length; i += 3) {
+                final double norm = param[i];
+                final double diff = x - param[i+1];
+                final double sigma = param[i+2];
+                final double i2s2 = 1 / (2 * sigma * sigma);
 
-            final double norm = param[0];
-            final double diff = x - param[1];
-            final double sigma = param[2];
-            final double i2s2 = 1 / (2 * sigma * sigma);
+                gradients[i] = nGaussian.value(diff, 1, i2s2); //n
+                gradients[i+1] = norm * gradients[i] * 2 * i2s2 * diff; //m
+                gradients[i+2] = gradients[i+1] * diff / sigma; //s
+            }
 
-            final double n = nGaussian.value(diff, 1, i2s2);
-            final double m = norm * n * 2 * i2s2 * diff;
-            final double s = m * diff / sigma;
-
-            return new double[] { n, m, s };
+            return gradients;
         }
 
         /**
@@ -167,29 +146,56 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
          * not 3.
          * @throws NotStrictlyPositiveException if {@code param[2]} is negative.
          */
-        private void validateParameters(double[] param)
-                throws NullArgumentException,
-                DimensionMismatchException,
-                NotStrictlyPositiveException {
-            if (param == null) {
-                throw new NullArgumentException();
-            }
-            if (param.length%3!=0) {
-                throw new DimensionMismatchException(param.length, 3);
-            }
-            for (int i = 2; i < param.length; i += 3) {
-                if (param[i] <= 0) {
-                    throw new NotStrictlyPositiveException(param[i]);
-                }
-            }
 
-        }
     }
 
-    private static double value(double xMinusMean,
+    private static double value(double x, double ... param){
+        validateParameters(param);
+        double sumV = 0;
+        int nGauss = (param.length/3);
+
+        double [][] pass = new double[nGauss][3];
+
+        int pAccessor = 0;
+        for (int i = 0; i < nGauss; ++i) {
+            pass[i][0] = param[pAccessor++];
+            pass[i][1] = param[pAccessor++];
+            pass[i][2] = param[pAccessor++];
+        }
+        try {
+
+            for (int i = 0; i < nGauss; i++) {
+                final double diff = x - pass[i][1];
+                final double i2s2 = 1 / (2 * pass[i][2] * pass[i][2]);
+                sumV += nGaussian.value(diff, pass[i][0], i2s2);
+            }
+        } catch (NotStrictlyPositiveException e) { // NOPMD
+            // Do nothing.
+        }
+        return sumV;
+    }
+    private static double singleValue(double xMinusMean,
                                 double norm,
                                 double i2s2) {
         return norm * FastMath.exp(-xMinusMean * xMinusMean * i2s2);
+    }
+
+    private static void validateParameters(double[] param)
+            throws NullArgumentException,
+            DimensionMismatchException,
+            NotStrictlyPositiveException {
+        if (param == null) {
+            throw new NullArgumentException();
+        }
+        if (param.length%3!=0) {
+            throw new DimensionMismatchException(param.length, 3);
+        }
+        for (int i = 2; i < param.length; i += 3) {
+            if (param[i] <= 0) {
+                throw new NotStrictlyPositiveException(param[i]);
+            }
+        }
+
     }
 
     /** {@inheritDoc}
