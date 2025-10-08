@@ -44,6 +44,8 @@ import java.util.*;
 //@Plugin(type = Command.class, headless = true, menuPath = "Analyze>Colocalization>Colocalization by Cross Correlation")
 public abstract class Abstract_CCC_gaussian extends Abstract_CCC_base {
 
+    @Parameter(label = "Number of Gaussians to fit:", description = "Values >1 fit a multi-term sum of Gaussians curve to the data")
+    protected int curveCount;
     @Parameter(label = "Generate contribution images?", description = "Generates images that highlight the signal from Image 1 and Image 2 that contributed to the result. Uncheck to use less memory.")
     protected boolean generateContributionImages;
 

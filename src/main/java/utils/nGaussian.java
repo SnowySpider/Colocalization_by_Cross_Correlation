@@ -54,6 +54,18 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
         this.gaussians = gaussians.clone();
     }
 
+    public nGaussian(double ... gaussianParams){
+        if(gaussianParams.length%3 != 0){
+            throw new DimensionMismatchException(gaussianParams.length, gaussianParams.length + gaussianParams.length%3);
+        }
+        this.count = gaussianParams.length/3;
+        gaussians = new Gaussian[this.count];
+        int i = 0;
+        for (int j = 0; j < this.count; j++) {
+            gaussians[j] = new Gaussian(gaussianParams[i++],gaussianParams[i++],gaussianParams[i++]);
+        }
+    }
+
     /** {@inheritDoc} */
     public double value(double x) {
         double returnValue = 0.0;
