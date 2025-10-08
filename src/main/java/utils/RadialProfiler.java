@@ -185,9 +185,10 @@ public class RadialProfiler {
         });
 
         double [] output = null;
+        nGaussianCurveFitter curveFitter = nGaussianCurveFitter.create();
         try{
+            System.out.println("Initializing Curvefitter");
             //todo: simple test, change to nGaussianCurveFitter and put in curveCount of 2, then print output
-            nGaussianCurveFitter curveFitter = nGaussianCurveFitter.create();
             output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
         }
         catch(TooManyIterationsException ignored){}
@@ -224,13 +225,15 @@ public class RadialProfiler {
                     }
                 });
                 try {
-                    output = GaussianCurveFitter.create().withMaxIterations(50).fit(obs.toList());
+                    output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
                 }
                 catch(TooManyIterationsException ignored){}
 
             }
         }
-
+        for (int i = 0; i < output.length; i++) {
+            System.out.println(output[i]);
+        }
         if(output == null|| output[2] <= scale[0] || output[1] < -scale[0] || output[0] < 0){
             gaussFitParameters = new double[]{0, inputMap.lastKey(), inputMap.lastKey()};
             confidence = -1.0;

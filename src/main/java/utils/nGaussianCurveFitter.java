@@ -148,7 +148,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
      */
     public nGaussianCurveFitter withCount(int newCurveCount) {
         return new nGaussianCurveFitter(initialGuess,
-                curveCount,
+                newCurveCount,
                 maxIter);
     }
 
@@ -207,9 +207,10 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
      */
     public static class ParameterGuesser {
         //Every triplet is ordered Normalization factor, mean and Standard Deviation
+        //Evidently, every single parameter must be listed out here. Not sure how to do this.
         private double[] guess;
 
-        private int curveCount;
+        //private int curveCount;
 
 
 
@@ -320,22 +321,25 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
          * sigma).
          */
         private double[] basicGuess(WeightedObservedPoint[] points, int curveCount) {
-
             double[] guess = new double[curveCount*3];
-            WeightedObservedPoint[] workingList = points;
+            WeightedObservedPoint[] workingList = points.clone();
             double [] output = null;
 
             for (int i = 0; i < curveCount; ++i) {
-                int offset = curveCount * 3;
+                int offset = i * 3;
 
                 /*This is going to take forever and seems crazy, but the basic method I tried first would not
                 work in every case. Specifically, it would not work with overlapping Gaussians with a small+narrow
                  on top of a big+broad.
                  */
                 try{
-                    output =  GaussianCurveFitter.create().withMaxIterations(10).fit(Arrays.asList(points));
+                    System.out.println("Attempting first guess");
+                    output =  GaussianCurveFitter.create().withMaxIterations(100).fit(Arrays.asList(workingList));
+                    System.out.println(output[0]);
                 }
                 catch(TooManyIterationsException ignored){}
+
+
 
                 guess[offset] = output[0];
                 guess[offset + 1] = output[1];

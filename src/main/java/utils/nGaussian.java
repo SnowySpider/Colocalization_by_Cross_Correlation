@@ -167,7 +167,7 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
             for (int i = 0; i < nGauss; i++) {
                 final double diff = x - pass[i][1];
                 final double i2s2 = 1 / (2 * pass[i][2] * pass[i][2]);
-                sumV += nGaussian.value(diff, pass[i][0], i2s2);
+                sumV += nGaussian.singleValue(diff, pass[i][0], i2s2);
             }
         } catch (NotStrictlyPositiveException e) { // NOPMD
             // Do nothing.
@@ -187,9 +187,9 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
         if (param == null) {
             throw new NullArgumentException();
         }
-        if (param.length%3!=0) {
-            throw new DimensionMismatchException(param.length, 3);
-        }
+//        if (param.length%3!=0) {
+//            throw new DimensionMismatchException(param.length, 3);
+//        }
         for (int i = 2; i < param.length; i += 3) {
             if (param[i] <= 0) {
                 throw new NotStrictlyPositiveException(param[i]);
