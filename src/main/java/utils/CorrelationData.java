@@ -23,6 +23,7 @@ package utils;
 
 import org.apache.commons.math3.exception.TooManyIterationsException;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
+import org.apache.commons.math3.analysis.function.Gaussian;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +40,6 @@ public class CorrelationData {
     public double[] gaussFitParameters;
 
     public Double confidence;
-
     public Double rSquared;
 
     public int curveCount;
@@ -115,44 +115,56 @@ public class CorrelationData {
         keyIterator.next();
         double minScale = keyIterator.next() - inputMap.firstKey();
 
-        if (output == null || output[2] <= minScale || output[1] < -minScale || output[0] < 0) {
-            for (Double windowSize = minScale/10; (output == null || output[2] <= minScale || output[1] < 0) && windowSize <= (minScale/2); windowSize += minScale/10){
-                obs.clear();
-                SortedMap<Double,Double> averaged = MovingAverage.averagedMap(inputMap, windowSize);
-                max = 0;
-                maxLoc = 0;
-                for (Double d : averaged.keySet()) {
-                    if (averaged.get(d) > max) {
-                        maxLoc = d;
-                        max = averaged.get(d);
-                    }
-                }
-                if(maxLoc == averaged.firstKey()){
-                    maxLoc = 0.0;
-                }
-                double finalMaxLoc1 = maxLoc;
+        for (int i = 0; i < curveCount; i++) {
+            int offset = i*3;
 
-                averaged.forEach((key, value) -> {
-                    obs.add(key, value);
-                    if (key > 2 * finalMaxLoc1) {
-                        obs.add(((2 * finalMaxLoc1) - key), value);
+            if (output == null || output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset+0] < 0) {
+                for (Double windowSize = minScale / 10; (output == null || output[offset+2] <= minScale || output[offset+1] < 0) && windowSize <= (minScale / 2); windowSize += minScale / 10) {
+                    obs.clear();
+                    SortedMap<Double, Double> averaged = MovingAverage.averagedMap(inputMap, windowSize);
+                    max = 0;
+                    maxLoc = 0;
+                    for (Double d : averaged.keySet()) {
+                        if (averaged.get(d) > max) {
+                            maxLoc = d;
+                            max = averaged.get(d);
+                        }
                     }
-                });
-                try {
-                    output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
-                }
-                catch(TooManyIterationsException ignored){}
+                    if (maxLoc == averaged.firstKey()) {
+                        maxLoc = 0.0;
+                    }
+                    double finalMaxLoc1 = maxLoc;
 
+                    averaged.forEach((key, value) -> {
+                        obs.add(key, value);
+                        if (key > 2 * finalMaxLoc1) {
+                            obs.add(((2 * finalMaxLoc1) - key), value);
+                        }
+                    });
+                    try {
+                        output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
+                    } catch (TooManyIterationsException ignored) {
+                    }
+
+                }
             }
-        }
 
-        if(output == null|| output[2] <= minScale || output[1] < -minScale || output[0] < 0){
-            gaussFitParameters = new double[]{0, inputMap.lastKey(), inputMap.lastKey()};
-            confidence = -1.0;
-            rSquared = -1.0;
-            gaussians = new nGaussian(1, -1,  1);
+            if (output == null || output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset+0] < 0) {
+                if(output == null)
+                    gaussFitParameters = new double[]{0, inputMap.lastKey(), inputMap.lastKey()};
+                else{
+                    gaussFitParameters[offset+0] = 0;
+                    gaussFitParameters[offset+1] = inputMap.lastKey();
+                    gaussFitParameters[offset+2] = inputMap.lastKey();
+                }
 
-            throw new NullPointerException("Could not fit Gaussian curve to data");
+                //todo: individual confidence values? how to upload one bad gaussian, and should I?
+                confidence = -1.0;
+                rSquared = -1.0;
+                gaussians.setGaussian(i, new Gaussian(1, -1, 1));
+
+                throw new NullPointerException("Could not fit Gaussian curve to data");
+            }
         }
         return output;
     }
