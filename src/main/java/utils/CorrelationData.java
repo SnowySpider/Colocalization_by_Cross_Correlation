@@ -26,7 +26,6 @@ import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.analysis.function.Gaussian;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.SortedMap;
 
 public class CorrelationData {
@@ -34,26 +33,52 @@ public class CorrelationData {
     public SortedMap<Double, Double> oCorrMap;
     public SortedMap<Double, Double> sCorrMap;
 
-    public nGaussian gaussians;
+    public nGaussian gaussians = null;
 
     //3 Parameter double: Normalization, Mean, Sigma
-    public double[] gaussFitParameters;
+    protected double[] gaussFitParameters;
 
-    public Double confidence;
-    public Double rSquared;
+    protected Double[] confidence;
+    protected Double rSquared;
 
-    public int curveCount;
+    public final int curveCount;
 
+    public double getGaussianNorm(int index){return gaussFitParameters[(index*3)];}
+    public double getGaussianMean(int index){return gaussFitParameters[(index*3)+1];}
+    public double getGaussianSD(int index){return gaussFitParameters[(index*3)+2];}
+    public double getGaussianPeakHeight(int index){return gaussians.getGaussian(index).value(getGaussianMean(index));}
+    public boolean hasConfidence(){return confidence != null;}
+    public double getConfidence(int index){return confidence[index];}
+    public double getRSquared(){return rSquared;}
+    public boolean hasGaussians(){return gaussians.getCount() > 0;}
 
-    public void fitGaussianCurve(){
+    public CorrelationData(int curveFitCount){
+        curveCount = curveFitCount;
+    }
+
+    public CorrelationData(double... gaussFitParameters){
+        this.gaussFitParameters = gaussFitParameters.clone();
+        curveCount = gaussFitParameters.length/3;
+        gaussians = new nGaussian(gaussFitParameters);
+    }
+
+    public void fitGaussianCurve() {
         gaussFitParameters = CurveFit(sCorrMap);
 
         gaussians = new nGaussian(gaussFitParameters);
 
-        if(oCorrMap != null)
-            confidence = (areaUnderCurve(sCorrMap, gaussFitParameters[1], gaussFitParameters[2]) / areaUnderCurve(oCorrMap, gaussFitParameters[1], gaussFitParameters[2]));
+        rSquared = calcRsquared();
 
-        rSquared = getRsquared();
+        if (oCorrMap != null){
+            confidence = new Double[curveCount];
+            for (int i = 0; i < curveCount; i++) {
+                confidence[i] = (areaUnderCurve(new Gaussian(getGaussianNorm(i), getGaussianMean(i),getGaussianSD(i)), sCorrMap, getGaussianMean(i), getGaussianSD(i)) / areaUnderCurve(oCorrMap, getGaussianMean(i), getGaussianSD(i)));
+            }
+        }
+        for (int i = 0; i < curveCount; i++) {
+            if(gaussFitParameters[i+1] == -1)
+                throw new NullPointerException("Could not fit Gaussian curve to data");
+        }
     }
 
     private double[] CurveFit(SortedMap<Double, Double> inputMap) {
@@ -94,9 +119,7 @@ public class CorrelationData {
         double [] output = null;
         nGaussianCurveFitter curveFitter = nGaussianCurveFitter.create();
         try{
-            System.out.println("Initializing Curvefitter");
-            //todo: simple test, change to nGaussianCurveFitter and put in curveCount of 2, then print output
-            output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
+            output = curveFitter.withCount(curveCount).withMaxIterations(100).fit(obs.toList());
         }
         catch(TooManyIterationsException ignored){}
 
@@ -104,12 +127,7 @@ public class CorrelationData {
          * Have to check if the curve was fit to a single noise spike, something that came up quite a bit during initial testing.
          * If not fit to a noise spike, values are returned with no further processing, if it is, the data is averaged
          * with nearest neighbors and another fit is attempted. This usually only needs a single round of averaging.
-         *
-         * We can use the pixel scale to test for this, as the SD of the spatial correlation should never be less than
-         * the pixel size.
          */
-        //todo: make this work for all possible outputs
-        //todo: scale = inputmap[1] - inputmap[0]
 
         Iterator<Double> keyIterator= inputMap.keySet().iterator();
         keyIterator.next();
@@ -117,9 +135,8 @@ public class CorrelationData {
 
         for (int i = 0; i < curveCount; i++) {
             int offset = i*3;
-
-            if (output == null || output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset+0] < 0) {
-                for (Double windowSize = minScale / 10; (output == null || output[offset+2] <= minScale || output[offset+1] < 0) && windowSize <= (minScale / 2); windowSize += minScale / 10) {
+            if (output == null || output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset] < 0) {
+                for (double windowSize = minScale / 10; (output == null || output[offset+2] <= minScale || output[offset+1] < 0) && windowSize <= (minScale / 2); windowSize += minScale / 10) {
                     obs.clear();
                     SortedMap<Double, Double> averaged = MovingAverage.averagedMap(inputMap, windowSize);
                     max = 0;
@@ -142,34 +159,42 @@ public class CorrelationData {
                         }
                     });
                     try {
-                        output = curveFitter.withCount(2).withMaxIterations(100).fit(obs.toList());
-                    } catch (TooManyIterationsException ignored) {
-                    }
-
+                        output = curveFitter.withCount(curveCount).withMaxIterations(100).fit(obs.toList());
+                    } catch (TooManyIterationsException ignored) {}
                 }
             }
 
-            if (output == null || output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset+0] < 0) {
-                if(output == null)
-                    gaussFitParameters = new double[]{0, inputMap.lastKey(), inputMap.lastKey()};
-                else{
-                    gaussFitParameters[offset+0] = 0;
-                    gaussFitParameters[offset+1] = inputMap.lastKey();
-                    gaussFitParameters[offset+2] = inputMap.lastKey();
+            if (output == null){
+                output = new double[curveCount*3];
+                for (int j = 0; j < curveCount; j++) {
+                    output[j*3] = 0;
+                    output[(j*3)+1] = -1.0;
+                    output[(j*3)+2] = inputMap.lastKey();
                 }
+                return output;
+            }
 
-                //todo: individual confidence values? how to upload one bad gaussian, and should I?
-                confidence = -1.0;
-                rSquared = -1.0;
-                gaussians.setGaussian(i, new Gaussian(1, -1, 1));
-
-                throw new NullPointerException("Could not fit Gaussian curve to data");
+            if (output[offset+2] <= minScale || output[offset+1] < -minScale || output[offset] < 0) {
+                output[offset] = 0;
+                output[offset+1] = -1.0;
+                output[offset+2] = inputMap.lastKey();
             }
         }
         return output;
     }
 
-    private double areaUnderCurve(Map<Double, Double> map, double mean, double sigma) {
+    private double areaUnderCurve(Gaussian gaussian, SortedMap<Double, Double> map, double mean, double sigma) {
+
+        double auc = 0;
+        for (Double d : map.keySet()) {
+            if ((mean - (3 * sigma)) < d && d < (mean + (3 * sigma))) {
+                auc += gaussian.value(d);
+            }
+        }
+        return auc;
+    }
+
+    private double areaUnderCurve(SortedMap<Double, Double> map, double mean, double sigma) {
 
         double auc = 0;
 
@@ -178,11 +203,10 @@ public class CorrelationData {
                 auc += map.get(d);
             }
         }
-
         return auc;
     }
 
-    private double getRsquared(){
+    private double calcRsquared(){
         final double[] residualsSum = {0};
         final double[] totalSum = {0};
         final double rangeMean = sCorrMap.subMap(gaussFitParameters[1] - (3 * gaussFitParameters[2]), gaussFitParameters[1] + (3 * gaussFitParameters[2])).values().stream().mapToDouble(Double::doubleValue).average().getAsDouble();

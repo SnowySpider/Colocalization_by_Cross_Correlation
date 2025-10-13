@@ -128,6 +128,9 @@ public abstract class Abstract_CCC_base implements Command{
     @Parameter(type = ItemIO.OUTPUT)
     protected XYPlot plot;
 
+    @Parameter(type = ItemIO.OUTPUT, label= "Summary of Results")
+    protected String summary;
+
     protected Dataset [] intermediates;
 
     protected String statusBase = "";
@@ -140,7 +143,6 @@ public abstract class Abstract_CCC_base implements Command{
     protected Img <FloatType> convertedImg1, convertedImg2;
     protected RadialProfiler radialProfiler;
     protected SCIFIOConfig config;
-    protected String summary;
 
     //region Time-lapse variables
     protected Optional<CalibratedAxis> calibratedTime;
@@ -244,6 +246,7 @@ public abstract class Abstract_CCC_base implements Command{
     protected String getUnitType(){ return dataset1.axis(Axes.X).isPresent() ? dataset1.axis(Axes.X).get().unit(): "Unlabeled distance unit"; }
 
     protected double getSigDigits(double input){
+        //crashes on infinite or NaN according to BigDecimal
         BigDecimal bd = new BigDecimal(input);
         bd = bd.round(new MathContext(significantDigits));
         return bd.doubleValue();
@@ -276,25 +279,29 @@ public abstract class Abstract_CCC_base implements Command{
         plot.yAxis().setLabel("Cross correlation");
         plot.setTitle("Correlation of images");
 
-        if(radialProfiler.gaussian != null) {
+        if(radialProfiler.correlationData.hasGaussians()) {
             XYSeries gaussData = plot.addXYSeries();
-            gaussData.setValues(new ArrayList<>(radialProfiler.sCorrMap.keySet()), radialProfiler.sCorrMap.keySet().stream().map(radialProfiler.gaussian::value).collect(toList()));
+            gaussData.setValues(new ArrayList<>(radialProfiler.correlationData.sCorrMap.keySet()), radialProfiler.correlationData.sCorrMap.keySet().stream().map(radialProfiler.correlationData.gaussians::value).collect(toList()));
             gaussData.setStyle(gaussStyle);
             gaussData.setLabel("Gaussian Fit");
 
-            plot.xAxis().setManualRange(0, Math.max(radialProfiler.gaussFitParameters[1] + (5 * radialProfiler.gaussFitParameters[2]), 0.01));
+            double maxX = 0;
+            for (int i = 0; i < radialProfiler.correlationData.curveCount; i++) {
+                maxX = Math.max(maxX,radialProfiler.correlationData.getGaussianMean(i) + (5 * radialProfiler.correlationData.getGaussianSD(i)));
+            }
+            plot.xAxis().setManualRange(0, maxX);
         }
 
-        if(radialProfiler.sCorrMap != null) {
+        if(radialProfiler.correlationData.sCorrMap != null) {
             XYSeries sCorrPlotData = plot.addXYSeries();
-            sCorrPlotData.setValues(new ArrayList<>(radialProfiler.sCorrMap.keySet()), new ArrayList<>(radialProfiler.sCorrMap.values()));
+            sCorrPlotData.setValues(new ArrayList<>(radialProfiler.correlationData.sCorrMap.keySet()), new ArrayList<>(radialProfiler.correlationData.sCorrMap.values()));
             sCorrPlotData.setStyle(sCorrStyle);
             sCorrPlotData.setLabel("Subtracted CC");
         }
 
-        if(radialProfiler.oCorrMap != null) {
+        if(radialProfiler.correlationData.oCorrMap != null) {
             XYSeries oCorrPlotData = plot.addXYSeries();
-            oCorrPlotData.setValues(new ArrayList<>(radialProfiler.oCorrMap.keySet()), new ArrayList<>(radialProfiler.oCorrMap.values()));
+            oCorrPlotData.setValues(new ArrayList<>(radialProfiler.correlationData.oCorrMap.keySet()), new ArrayList<>(radialProfiler.correlationData.oCorrMap.values()));
             oCorrPlotData.setStyle(oCorrStyle);
             oCorrPlotData.setLabel("Original CC");
         }
@@ -302,27 +309,27 @@ public abstract class Abstract_CCC_base implements Command{
 
     protected void generateFullCorrelationTable(){
         List<HashMap<String,Double>> correlationTableList = new ArrayList<>();
-        RadialProfiler finalRadialProfile = radialProfiler;
-        SortedMap<Double, Double> keyMap = radialProfiler.oCorrMap != null ? radialProfiler.oCorrMap : radialProfiler.sCorrMap;
+        //RadialProfiler finalRadialProfile = radialProfiler;
+        SortedMap<Double, Double> keyMap = radialProfiler.correlationData.oCorrMap != null ? radialProfiler.correlationData.oCorrMap : radialProfiler.correlationData.sCorrMap;
 
         keyMap.keySet().stream().forEachOrdered((d) -> {
             LinkedHashMap<String, Double> row = new LinkedHashMap<String, Double>();
             row.put("Distance (" + getUnitType() +")", (getSigDigits(d)));
-            if(radialProfiler.oCorrMap != null) row.put("Original CC", getSigDigits(finalRadialProfile.oCorrMap.get(d)));
-            if(radialProfiler.sCorrMap != null) row.put("Subtracted CC", getSigDigits(finalRadialProfile.sCorrMap.get(d)));
-            if(radialProfiler.gaussian != null) row.put("Gaussian fit", getSigDigits(finalRadialProfile.gaussian.value(d)));
+            if(radialProfiler.correlationData.oCorrMap != null) row.put("Original CC", getSigDigits(radialProfiler.correlationData.oCorrMap.get(d)));
+            if(radialProfiler.correlationData.sCorrMap != null) row.put("Subtracted CC", getSigDigits(radialProfiler.correlationData.sCorrMap.get(d)));
+            if(radialProfiler.correlationData.gaussians != null) row.put("Gaussian fit", getSigDigits(radialProfiler.correlationData.gaussians.value(d)));
             correlationTableList.add(row);
         });
         correlationTable = Tables.wrap(correlationTableList, null);
     }
 
     protected void addDataToHeatmaps(long frame){
-        SortedMap<Double, Double> keyMap = radialProfiler.oCorrMap != null ? radialProfiler.oCorrMap : radialProfiler.sCorrMap;
+        SortedMap<Double, Double> keyMap = radialProfiler.correlationData.oCorrMap != null ? radialProfiler.correlationData.oCorrMap : radialProfiler.correlationData.sCorrMap;
         if(timeCorrelationHeatMap == null) {
             int channelCount = 0;
-            if(radialProfiler.oCorrMap != null) ++channelCount;
-            if(radialProfiler.sCorrMap != null) ++channelCount;
-            if(radialProfiler.gaussian != null) ++channelCount;
+            if(radialProfiler.correlationData.oCorrMap != null) ++channelCount;
+            if(radialProfiler.correlationData.sCorrMap != null) ++channelCount;
+            if(radialProfiler.correlationData.gaussians != null) channelCount += radialProfiler.correlationData.curveCount;
 
             timeCorrelationHeatMap = datasetService.create(new FloatType(), new long[]{dataset1.dimension(Axes.TIME), keyMap.keySet().size(), channelCount}, "Correlation over time of " + dataset1.getName() + " and " + dataset2.getName(), new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
 
@@ -335,7 +342,23 @@ public abstract class Abstract_CCC_base implements Command{
 
             timeCorrelationHeatMap.axis(2).setType(Axes.CHANNEL);
             timeCorrelationHeatMap.initializeColorTables(channelCount);
-            timeCorrelationHeatMap.setColorTable(ColorTables.MAGENTA,0);
+
+            if(radialProfiler.correlationData.oCorrMap != null){
+                timeCorrelationHeatMap.setColorTable(ColorTables.BLUE,0);
+            }
+
+            if(radialProfiler.correlationData.oCorrMap == null) {
+                timeCorrelationHeatMap.setColorTable(ColorTables.GREEN,0);
+                for (int i = 1; i < channelCount; i++) {
+                    timeCorrelationHeatMap.setColorTable(ColorTables.MAGENTA,i);
+                }
+            }
+            if(radialProfiler.correlationData.oCorrMap != null && radialProfiler.correlationData.sCorrMap != null) {
+                timeCorrelationHeatMap.setColorTable(ColorTables.GREEN, 1);
+                for (int i = 2; i < channelCount; i++) {
+                    timeCorrelationHeatMap.setColorTable(ColorTables.MAGENTA, i);
+                }
+            }
             //EnumeratedAxis seems to be broken and doesn't show the proper values in ImageJ
             //timeCorrelationHeatMap.setAxis(new EnumeratedAxis(Axes.Y, getUnitType(), radialProfile.oCorrMap.keySet().stream().mapToDouble(Double::doubleValue).toArray()), 1);
             //uiService.showDialog("First key: " + radialProfile.oCorrMap.firstKey() + "," + timeCorrelationHeatMap.axis(1).rawValue(radialProfile.oCorrMap.firstKey()));
@@ -347,17 +370,19 @@ public abstract class Abstract_CCC_base implements Command{
 
         for (int k = 0; k < keySet.length; k++) {
             int currentChannel = 0;
-            if(radialProfiler.gaussian != null){
+            if(radialProfiler.correlationData.oCorrMap != null){
                 correlationAccessor.setPosition(new long[]{frame,k,currentChannel++});
-                correlationAccessor.get().setReal(radialProfiler.gaussian.value(keySet[k]));
+                correlationAccessor.get().setReal(radialProfiler.correlationData.oCorrMap.get(keySet[k]));
             }
-            if(radialProfiler.sCorrMap != null){
+            if(radialProfiler.correlationData.sCorrMap != null){
                 correlationAccessor.setPosition(new long[]{frame,k,currentChannel++});
-                correlationAccessor.get().setReal(radialProfiler.sCorrMap.get(keySet[k]));
+                correlationAccessor.get().setReal(radialProfiler.correlationData.sCorrMap.get(keySet[k]));
             }
-            if(radialProfiler.oCorrMap != null){
-                correlationAccessor.setPosition(new long[]{frame,k,currentChannel++});
-                correlationAccessor.get().setReal(radialProfiler.oCorrMap.get(keySet[k]));
+            if(radialProfiler.correlationData.gaussians != null){
+                for (int i = 0; i < radialProfiler.correlationData.gaussians.getCount(); i++) {
+                    correlationAccessor.setPosition(new long[]{frame, k, currentChannel++});
+                    correlationAccessor.get().setReal(radialProfiler.correlationData.gaussians.getGaussian(i).value(keySet[k]));
+                }
             }
         }
     }

@@ -40,7 +40,7 @@ import java.util.*;
 
 public class RadialProfiler {
 
-    protected CorrelationData correlationData;
+    public CorrelationData correlationData;
 
     private long[] dimensions;
 
@@ -50,6 +50,12 @@ public class RadialProfiler {
 
     public RadialProfiler(RandomAccessibleInterval input, double[] inputScale) throws Exception {
         this.initializeToImageDimensions(input, inputScale);
+        correlationData = new CorrelationData();
+    }
+
+    public RadialProfiler(RandomAccessibleInterval input, double[] inputScale, int curveFitCount) throws Exception {
+        this.initializeToImageDimensions(input, inputScale);
+        correlationData = new CorrelationData(curveFitCount);
     }
 
     //This will need to throw an exception, in case the scale an input dimensions don't match

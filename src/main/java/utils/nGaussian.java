@@ -66,6 +66,8 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
         }
     }
 
+    public int getCount(){ return count;}
+
     public void setGaussian(int index, Gaussian inputGaussian){
         gaussians[index] = inputGaussian;
     }

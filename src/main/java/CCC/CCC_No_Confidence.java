@@ -29,7 +29,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
-import utils.CCfunctions;
 import utils.RadialProfiler;
 
 
@@ -53,7 +52,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
         //region Single frame analysis
         if(dataset1.getFrames() == 1) {
             try {
-                radialProfiler = new RadialProfiler(convertedImg1, scale);
+                radialProfiler = new RadialProfiler(convertedImg1, scale, curveCount);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -82,7 +81,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
                     }
                 }
                 try {
-                    radialProfiler = new RadialProfiler(temp1, scale);
+                    radialProfiler = new RadialProfiler(temp1, scale, curveCount);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return;
@@ -95,7 +94,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
                     throw e;
                 }
                 addDataToHeatmaps(i);
-                addToTimeResultsTable(i);
+                addToFullTimeResultsTable(i);
             }
         }
         //endregion
@@ -115,11 +114,10 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
     private <R extends RealType<?>> void colocalizationAnalysis(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval<FloatType> img2, RandomAccessibleInterval<R> imgMask, RadialProfiler radialProfiler, final RandomAccessibleInterval <R> contribution1, final RandomAccessibleInterval <R> contribution2, RandomAccessibleInterval <R> [] localIntermediates, ImgFactory imgFactory){
 
         Img<FloatType> subtracted = ops.create().img(img1, new FloatType());
-        Img<FloatType> gaussModifiedCorr;
 
         statusService.showStatus(currentStatus++, maxStatus,statusBase + "Generating averaged mask");
 
-        CCfunctions ccFunctions = new CCfunctions(img1, img2, imgMask, scale, imgFactory);
+        initializeData(img1, img2, imgMask, scale, imgFactory);
 
         statusService.showStatus(currentStatus++, maxStatus,statusBase + "Generating subtracted correlation");
 
@@ -136,27 +134,10 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
             subtracted = null;
         }
 
-        statusService.showStatus(currentStatus++, maxStatus,statusBase + "Fitting gaussian to data");
-        try{radialProfiler.fitGaussianCurve();}
-        catch (NullPointerException e){
-            logService.warn("Failed to fit gaussian curve to cross correlation of " + dataset1.getName() + " and " + dataset2.getName() + ", suggesting no correlation between the images.\nAcquired data and intermediate correlation images (if the option was selected) will still be shown. Statistical measures will be set to error values (-1).");
-            if(generateContributionImages)
-                ++currentStatus;
-            return;
-        }
+        fitGaussianCurves();
 
         if(generateContributionImages) {
-            statusService.showStatus(currentStatus++, maxStatus,statusBase + "Determining channel contributions");
-            //gaussModifiedCorr = imgFactory.create(img1);
-            gaussModifiedCorr = ops.create().img(img1, new FloatType());
-
-            ccFunctions.generateGaussianModifiedCCImage(subtracted, gaussModifiedCorr, radialProfiler.gaussian, radialProfiler.gaussFitParameters);
-
-            if(showIntermediates){
-                LoopBuilder.setImages(localIntermediates[1], gaussModifiedCorr).multiThreaded().forEachPixel((a,b) -> a.setReal(b.get()));
-            }
-
-            ccFunctions.calculateContributionImages(img1, img2, gaussModifiedCorr, contribution1, contribution2);
+            generateContributionImages(img1, img2, subtracted, localIntermediates[1], contribution1,contribution2);
         }
     }
 }

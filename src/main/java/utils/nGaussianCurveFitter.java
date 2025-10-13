@@ -333,17 +333,21 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
                  on top of a big+broad.
                  */
                 try{
-                    System.out.println("Attempting first guess");
-                    output =  GaussianCurveFitter.create().withMaxIterations(100).fit(Arrays.asList(workingList));
-                    System.out.println(output[0]);
+                    output =  GaussianCurveFitter.create().withMaxIterations(50).fit(Arrays.asList(workingList));
                 }
                 catch(TooManyIterationsException ignored){}
 
 
-
-                guess[offset] = output[0];
-                guess[offset + 1] = output[1];
-                guess[offset + 2] = output[2];
+                if(output != null) {
+                    guess[offset] = output[0];
+                    guess[offset + 1] = output[1];
+                    guess[offset + 2] = output[2];
+                }
+                else{
+                    guess[offset] = 0;
+                    guess[offset + 1] = 0;
+                    guess[offset + 2] = 1;
+                }
 
                 workingList = subtractGaussian(workingList, new Gaussian(output[0],output[1],output[2]));
             }

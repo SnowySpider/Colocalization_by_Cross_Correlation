@@ -30,27 +30,26 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
-import org.apache.commons.math3.analysis.function.Gaussian;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-public class CCfunctions <R extends RealType<R>, F extends FloatType> {
+public class CrossCorrelationFunctions<R extends RealType<R>, F extends FloatType> {
 
     private FFTConvolution fdMath;
     protected AveragedMask averagedMaskImg1;
     private double maskVolume;
     private double [] scale;
 
-    public CCfunctions(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval <FloatType> img2, double [] inputScale, ImgFactory<R> imgFactory){
+    public CrossCorrelationFunctions(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval <FloatType> img2, double [] inputScale, ImgFactory<R> imgFactory){
         ExecutorService service = Executors.newCachedThreadPool();
         scale = inputScale.clone();
         maskVolume = 1;
         fdMath = new FFTConvolution(extendImage(img1), img1, extendImage(img2), img2, imgFactory.imgFactory(new ComplexFloatType()), service);
     }
 
-    public CCfunctions(RandomAccessibleInterval<FloatType> img1, RandomAccessibleInterval<FloatType> img2, RandomAccessibleInterval<R> mask, double [] inputScale, ImgFactory<R> imgFactory){
+    public CrossCorrelationFunctions(RandomAccessibleInterval<FloatType> img1, RandomAccessibleInterval<FloatType> img2, RandomAccessibleInterval<R> mask, double [] inputScale, ImgFactory<R> imgFactory){
         ExecutorService service = Executors.newCachedThreadPool();
         averagedMaskImg1 = new AveragedMask(img1, mask);
         scale = inputScale.clone();
@@ -99,8 +98,8 @@ public class CCfunctions <R extends RealType<R>, F extends FloatType> {
         LoopBuilder.setImages(output).multiThreaded().forEachPixel((out) -> out.setReal(out.get()/maskVolume));
     }
 
-    public void generateGaussianModifiedCCImage(RandomAccessibleInterval<R> ccImage, RandomAccessibleInterval <R> output, Gaussian gaussian, double [] gaussFitParameters){
-        Contributions.generateGaussianModifiedCCImage(ccImage, output, gaussian, gaussFitParameters, scale);
+    public void generateGaussianModifiedCCImage(RandomAccessibleInterval<R> ccImage, RandomAccessibleInterval <R> output, CorrelationData  correlationData){
+        Contributions.generateGaussianModifiedCCImage(ccImage, output, correlationData, scale);
     }
 
     public void calculateContributionImages(RandomAccessibleInterval<? extends RealType> img1, RandomAccessibleInterval<? extends RealType> img2, RandomAccessibleInterval <? extends FloatType> ccImage, RandomAccessibleInterval<? extends RealType> img1contribution, RandomAccessibleInterval<? extends RealType> img2contribution){

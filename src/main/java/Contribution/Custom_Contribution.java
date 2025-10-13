@@ -43,6 +43,7 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import utils.Contributions;
+import utils.CorrelationData;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,8 +87,7 @@ public class Custom_Contribution implements Command{
         @Parameter(type = ItemIO.OUTPUT)
         protected Dataset ContributionOf1, ContributionOf2;
 
-        Gaussian gaussian;
-        double [] gaussFitParameters;
+        CorrelationData correlationData;
 
         double [] scale;
 
@@ -106,10 +106,7 @@ public class Custom_Contribution implements Command{
                         ccImage = dataset1.duplicateBlank();
                         LoopBuilder.setImages(ccImage).multiThreaded().forEachPixel(SetOne::setOne);
                 }
-
-
-                gaussian = new Gaussian(mean, SD);
-                gaussFitParameters = new double[] {1, mean, SD};
+                correlationData = new CorrelationData(1.0, mean, SD);
 
                 if(saveFolder != null) saveFolder.mkdirs();
 
@@ -153,7 +150,7 @@ public class Custom_Contribution implements Command{
                 //region single-frame calculation
                 if(dataset1.getFrames() == 1){
                         Img<FloatType> gaussModifiedCorr = ops.create().img(dataset1, new FloatType());
-                        Contributions.generateGaussianModifiedCCImage(ccImage, gaussModifiedCorr, gaussian, gaussFitParameters, scale);
+                        Contributions.generateGaussianModifiedCCImage(ccImage, gaussModifiedCorr, correlationData, scale);
                         Contributions.calculateContributionImages(dataset1, dataset2, gaussModifiedCorr, ContributionOf1, ContributionOf2, dataset1.getImgPlus().factory());
                 }
                 //endregion
@@ -167,7 +164,7 @@ public class Custom_Contribution implements Command{
                                 Img<FloatType> gaussModifiedCorr = ops.create().img(ccImageTemp, new FloatType());
 
                                 //Have to do this for every frame for
-                                Contributions.generateGaussianModifiedCCImage(ccImageTemp, gaussModifiedCorr, gaussian, gaussFitParameters, scale);
+                                Contributions.generateGaussianModifiedCCImage(ccImageTemp, gaussModifiedCorr, correlationData, scale);
 
                                 Contributions.calculateContributionImages(temp1, temp2, gaussModifiedCorr, getActiveFrame(ContributionOf1), getActiveFrame(ContributionOf2), dataset1.getImgPlus().factory());
                         }
