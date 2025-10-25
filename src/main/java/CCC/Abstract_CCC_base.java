@@ -165,7 +165,7 @@ public abstract class Abstract_CCC_base implements Command{
     protected void initializePlugin(String[] intermediateNames){
         statusService.showStatus("Initializing plugin data");
 
-        String version = "2.2.3";
+        String version = "2.3.0";
         summary = "Results generated using CCC version " + version + "\n"
                 + "Plugin website: https://imagej.net/plugins/colocalization-by-cross-correlation\n\n";
 

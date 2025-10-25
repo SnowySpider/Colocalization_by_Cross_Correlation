@@ -40,6 +40,7 @@ import com.google.common.collect.Maps;
 
 
 #@ File[] (label="Select images to process", style="files") fileList
+#@ File (label="Results output directory", style="directory", persist=true) outputDir
 #@ UIService uiService
 #@ OpService ops
 #@ ModuleService moduleService
@@ -124,7 +125,7 @@ for (int i = 0; i < fileList.length; i++) {
             "significantDigits", 4,
             "generateContributionImages",false,
             "showIntermediates",false ,
-            "saveFolder", ""
+            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName()
     ).get().getOutput("resultsTable");
 
     imageNames.add(floatImage.getName());
