@@ -64,6 +64,9 @@ public class CorrelationData {
 
     public void fitGaussianCurve() {
         gaussFitParameters = CurveFit(sCorrMap);
+        for(double val:gaussFitParameters){
+            System.out.println(val);
+        }
 
         gaussians = new nGaussian(gaussFitParameters);
 
@@ -121,7 +124,7 @@ public class CorrelationData {
         try{
             output = curveFitter.withCount(curveCount).withMaxIterations(100).fit(obs.toList());
         }
-        catch(TooManyIterationsException ignored){}
+        catch(Exception ignored){}
 
         /*
          * Have to check if the curve was fit to a single noise spike, something that came up quite a bit during initial testing.
@@ -160,7 +163,7 @@ public class CorrelationData {
                     });
                     try {
                         output = curveFitter.withCount(curveCount).withMaxIterations(100).fit(obs.toList());
-                    } catch (TooManyIterationsException ignored) {}
+                    } catch (Exception ignored) {}
                 }
             }
 

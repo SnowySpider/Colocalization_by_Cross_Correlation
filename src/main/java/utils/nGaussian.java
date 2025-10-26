@@ -62,7 +62,8 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
         gaussians = new Gaussian[this.count];
         int i = 0;
         for (int j = 0; j < this.count; j++) {
-            gaussians[j] = new Gaussian(gaussianParams[i++],gaussianParams[i++],gaussianParams[i++]);
+            gaussians[j] = new Gaussian(gaussianParams[i++],gaussianParams[i++],gaussianParams[i] == 0 ? 1: gaussianParams[i]);
+            ++i;
         }
     }
 
@@ -138,11 +139,8 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
                 NotStrictlyPositiveException {
             validateParameters(param);
 
-            //returned double[] should match incoming param number! yay!
-
             double [] gradients = new double[param.length];
 
-            //This treats each gaussian separately, not sure if that's correct
             for (int i = 0; i < param.length; i += 3) {
                 final double norm = param[i];
                 final double diff = x - param[i+1];
@@ -152,6 +150,7 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
                 gradients[i] = nGaussian.value(diff, 1, i2s2); //n
                 gradients[i+1] = norm * gradients[i] * 2 * i2s2 * diff; //m
                 gradients[i+2] = gradients[i+1] * diff / sigma; //s
+                if(gradients[i+2] == 0) gradients[i+2] = 1;
             }
 
             return gradients;
@@ -212,11 +211,11 @@ public class nGaussian implements UnivariateDifferentiableFunction, Differentiab
 //        if (param.length%3!=0) {
 //            throw new DimensionMismatchException(param.length, 3);
 //        }
-        for (int i = 2; i < param.length; i += 3) {
-            if (param[i] <= 0) {
-                throw new NotStrictlyPositiveException(param[i]);
-            }
-        }
+//        for (int i = 2; i < param.length; i += 3) {
+//            if (param[i] < 0) {
+//                throw new NotStrictlyPositiveException(param[i]);
+//            }
+//        }
 
     }
 

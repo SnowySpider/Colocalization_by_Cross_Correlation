@@ -323,10 +323,10 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
         private double[] basicGuess(WeightedObservedPoint[] points, int curveCount) {
             double[] guess = new double[curveCount*3];
             WeightedObservedPoint[] workingList = points.clone();
-            double [] output = null;
 
             for (int i = 0; i < curveCount; ++i) {
                 int offset = i * 3;
+                double [] output = null;
 
                 /*This is going to take forever and seems crazy, but the basic method I tried first would not
                 work in every case. Specifically, it would not work with overlapping Gaussians with a small+narrow

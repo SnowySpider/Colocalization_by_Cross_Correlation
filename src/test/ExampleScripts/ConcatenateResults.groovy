@@ -125,7 +125,7 @@ for (int i = 0; i < fileList.length; i++) {
             "significantDigits", 4,
             "generateContributionImages",false,
             "showIntermediates",false ,
-            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName()
+            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName() + File.separator
     ).get().getOutput("resultsTable");
 
     imageNames.add(floatImage.getName());

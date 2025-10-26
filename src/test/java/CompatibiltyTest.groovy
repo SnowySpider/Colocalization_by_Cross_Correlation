@@ -26,6 +26,7 @@ import CCC.Just_Cross_Correlation
 import net.imagej.Dataset
 import net.imagej.ImageJ
 import net.imagej.axis.Axes
+import net.imglib2.FinalInterval
 import net.imglib2.view.Views
 import org.scijava.command.CommandInfo
 import org.scijava.module.ModuleInfo
@@ -95,8 +96,19 @@ argumentsGenerator.gaussArguments.each { argumentArray ->
 //region: 4D 16-bit test
 Dataset mitosis = ij.scifio().datasetIO().open("http://imagej.net/images/mitosis.tif");
 channelAxis = mitosis.dimensionIndex(Axes.CHANNEL);
-ch1 = ij.dataset().create(Views.hyperSlice(mitosis,channelAxis, 0));
-ch2 = ij.dataset().create(Views.hyperSlice(mitosis,channelAxis, 1));
+
+long[] min = new long[mitosis.numDimensions()];
+long[] max = new long[mitosis.numDimensions()];
+for(int d = 0; d < min.length; ++d){
+    min[d] = mitosis.min(d);
+    max[d] = mitosis.max(d);
+}
+min[channelAxis] = 0;
+max[channelAxis] = 0;
+ch1 = ij.dataset().create(ij.op().transform().crop(mitosis,new FinalInterval(min, max), true));
+min[channelAxis] = 1;
+max[channelAxis] = 1;
+ch2 = ij.dataset().create(ij.op().transform().crop(mitosis,new FinalInterval(min, max), true));
 mask = ij.dataset().create(ij.op().threshold().huang(ij.op().filter().gauss(ch1, 5)));
 
     argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/4D_16-bit/JCC"));
