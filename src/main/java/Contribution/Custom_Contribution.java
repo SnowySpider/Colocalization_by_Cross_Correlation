@@ -142,8 +142,6 @@ public class Custom_Contribution extends ContextCommand {
 
                 correlationData = new CorrelationData(gaussParams);
 
-                System.out.println(correlationData.gaussians.value(gaussParams[1]));
-
                 if(saveFolder != null) saveFolder.mkdirs();
 
                 config = new SCIFIOConfig();
