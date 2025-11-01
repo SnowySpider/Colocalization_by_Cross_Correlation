@@ -140,6 +140,7 @@ public abstract class Abstract_CCC_base implements Command{
     protected double [] scale;
     protected CalibratedAxis[] inputCalibratedAxes;
     protected AxisType[] inputAxisTypes;
+    //todo: Convert to DiskCachedImg
     protected Img <FloatType> convertedImg1, convertedImg2;
     protected RadialProfiler radialProfiler;
     protected SCIFIOConfig config;
@@ -156,10 +157,8 @@ public abstract class Abstract_CCC_base implements Command{
     protected Abstract_CCC_base() {
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        statusService.showStatus(maxStatus, maxStatus,statusBase + "Finished!");
-        super.finalize();
+    protected void finish() {
+        statusService.showStatus(maxStatus, maxStatus,statusBase + "CCC Finished!");
     }
 
     protected void initializePlugin(String[] intermediateNames){

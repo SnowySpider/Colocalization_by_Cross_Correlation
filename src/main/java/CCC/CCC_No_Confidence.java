@@ -52,7 +52,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
         //region Single frame analysis
         if(dataset1.getFrames() == 1) {
             try {
-                radialProfiler = new RadialProfiler(convertedImg1, scale, curveCount);
+                radialProfiler = new RadialProfiler(convertedImg1, scale, numGaussians2Fit);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -81,7 +81,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
                     }
                 }
                 try {
-                    radialProfiler = new RadialProfiler(temp1, scale, curveCount);
+                    radialProfiler = new RadialProfiler(temp1, scale, numGaussians2Fit);
                 } catch (Exception e) {
                     e.printStackTrace();
                     return;
@@ -108,7 +108,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
         if(saveFolder != null && !saveFolder.getPath().equals("")){
             saveResultsToFolder();
         }
-
+        finish();
     }
 
     private <R extends RealType<?>> void colocalizationAnalysis(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval<FloatType> img2, RandomAccessibleInterval<R> imgMask, RadialProfiler radialProfiler, final RandomAccessibleInterval <R> contribution1, final RandomAccessibleInterval <R> contribution2, RandomAccessibleInterval <R> [] localIntermediates, ImgFactory imgFactory){

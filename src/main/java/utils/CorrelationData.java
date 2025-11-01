@@ -64,9 +64,6 @@ public class CorrelationData {
 
     public void fitGaussianCurve() {
         gaussFitParameters = CurveFit(sCorrMap);
-        for(double val:gaussFitParameters){
-            System.out.println(val);
-        }
 
         gaussians = new nGaussian(gaussFitParameters);
 

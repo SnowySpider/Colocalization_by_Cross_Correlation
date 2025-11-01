@@ -33,7 +33,6 @@ import org.scijava.ItemIO;
 import org.scijava.plugin.Parameter;
 import org.scijava.table.Table;
 import org.scijava.table.Tables;
-import utils.CorrelationData;
 import utils.CrossCorrelationFunctions;
 
 import java.io.File;
@@ -51,7 +50,7 @@ import java.util.*;
 public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends FloatType> extends Abstract_CCC_base {
 
     @Parameter(label = "Number of Gaussians to fit:", description = "Values > 1 fit a multi-term sum of Gaussians curve to the data", required=false)
-    protected int curveCount;
+    protected int numGaussians2Fit;
     @Parameter(label = "Generate contribution images?", description = "Generates images that highlight the signal from Image 1 and Image 2 that contributed to the result. Uncheck to use less memory.")
     protected boolean generateContributionImages;
 
@@ -73,8 +72,8 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
     @Override
     protected void initializePlugin(String[] intermediateNames){
         super.initializePlugin(intermediateNames);
-        if(curveCount == 0)
-            curveCount = 1;
+        if(numGaussians2Fit == 0)
+            numGaussians2Fit = 1;
         if (generateContributionImages) {
             initializeContributionImages();
             maxStatus += dataset1.getFrames();
@@ -129,7 +128,7 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
             if(radialProfiler.correlationData.oCorrMap != null) row.put("Original CC", getSigDigits(radialProfiler.correlationData.oCorrMap.get(d)));
             if(radialProfiler.correlationData.sCorrMap != null) row.put("Subtracted CC", getSigDigits(radialProfiler.correlationData.sCorrMap.get(d)));
             if(radialProfiler.correlationData.gaussians != null) {
-                for (int i = 0; i < curveCount; i++) {
+                for (int i = 0; i < numGaussians2Fit; i++) {
                     row.put(("Gaussian fit-" + (i+1)), getSigDigits(radialProfiler.correlationData.gaussians.getGaussian(i).value(d)));
                 }
             }
@@ -143,13 +142,13 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
 
         if(dataset1.getFrames() == 1){
             LinkedHashMap<String, Double> gaussResultsHash = new LinkedHashMap<>();
-            for (int i = 0; i < curveCount; i++) {
-                gaussResultsHash.put("Mean"+(i+1)+" (" + getUnitType() + ")", radialProfiler.correlationData.getGaussianMean(i));
-                gaussResultsHash.put("StDev"+(i+1)+" (" + getUnitType() + ")", radialProfiler.correlationData.getGaussianSD(i));
-                gaussResultsHash.put("Height"+(i+1), radialProfiler.correlationData.getGaussianPeakHeight(i));
-                if (radialProfiler.correlationData.hasConfidence()) gaussResultsHash.put(("Confidence"+(i+1)), radialProfiler.correlationData.getConfidence(i));
+            for (int i = 0; i < numGaussians2Fit; i++) {
+                gaussResultsHash.put("Mean"+(i+1)+" (" + getUnitType() + ")", getSigDigits(radialProfiler.correlationData.getGaussianMean(i)));
+                gaussResultsHash.put("StDev"+(i+1)+" (" + getUnitType() + ")", getSigDigits(radialProfiler.correlationData.getGaussianSD(i)));
+                gaussResultsHash.put("Height"+(i+1), getSigDigits(radialProfiler.correlationData.getGaussianPeakHeight(i)));
+                if (radialProfiler.correlationData.hasConfidence()) gaussResultsHash.put(("Confidence"+(i+1)), getSigDigits(radialProfiler.correlationData.getConfidence(i)));
             }
-            gaussResultsHash.put("R-squared", radialProfiler.correlationData.getRSquared());
+            gaussResultsHash.put("R-squared", getSigDigits(radialProfiler.correlationData.getRSquared()));
 
             generateResultsTable(gaussResultsHash);
             addGaussianToSummaryFile(gaussResultsHash);
@@ -173,7 +172,7 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
         if (fullTimeCorrelationTable == null) fullTimeCorrelationTable = new ArrayList<LinkedHashMap<String,Double>>();
 
         LinkedHashMap<String, Double> gaussianMap = new LinkedHashMap<>();
-        for (int i = 0; i < curveCount; i++) {
+        for (int i = 0; i < numGaussians2Fit; i++) {
             gaussianMap.put(calibratedTime.isPresent() && calibratedTime.get().calibratedValue(1) != 0 ? "Time (" + calibratedTime.get().unit() + ")" : "Frame",getSigDigits(calibratedTime.get().calibratedValue(frame)));
             gaussianMap.put("Mean-" + (i+1), getSigDigits(radialProfiler.correlationData.getGaussianMean(i)));
             gaussianMap.put("SD-"+ (i+1), getSigDigits(radialProfiler.correlationData.getGaussianSD(i)));
@@ -195,14 +194,14 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
             Double o1Max = 0.0;
             Double o2Max = 0.0;
             if (o1.get("Confidence-1") != null) {
-                for (int i = 0; i < curveCount; i++) {
+                for (int i = 0; i < numGaussians2Fit; i++) {
                     o1Max = Math.max(o1Max, o1.get("Confidence-"+(i+1)));
                     o2Max = Math.max(o2Max, o2.get("Confidence-"+(i+1)));
                 }
                 return o1Max.compareTo(o2Max);
             }
             else{
-                for (int i = 0; i < curveCount; i++) {
+                for (int i = 0; i < numGaussians2Fit; i++) {
                     o1Max = Math.max(o1Max, o1.get("SD-"+(i+1)));
                     o2Max = Math.max(o2Max, o2.get("SD-"+(i+1)));
                 }

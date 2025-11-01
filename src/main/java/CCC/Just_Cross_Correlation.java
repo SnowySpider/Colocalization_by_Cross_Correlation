@@ -105,6 +105,7 @@ public class Just_Cross_Correlation extends Abstract_CCC_base {
         if(saveFolder != null && !saveFolder.getPath().equals("")){
             saveResultsToFolder();
         }
+        finish();
     }
 
     //made this to quickly and easily test different extension methods for correlation
