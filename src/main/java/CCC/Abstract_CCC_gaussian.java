@@ -46,18 +46,17 @@ import java.util.*;
  * @author Andrew McCall
  */
 
-//@Plugin(type = Command.class, headless = true, menuPath = "Analyze>Colocalization>Colocalization by Cross Correlation")
 public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends FloatType> extends Abstract_CCC_base {
 
     @Parameter(label = "Number of Gaussians to fit:", description = "Values > 1 fit a multi-term sum of Gaussians curve to the data", required=false)
     protected int numGaussians2Fit;
-    @Parameter(label = "Generate contribution images?", description = "Generates images that highlight the signal from Image 1 and Image 2 that contributed to the result. Uncheck to use less memory.")
+    @Parameter(label = "Generate contribution images?", description = "Generates images that highlight the signal from Image 1 and Image 2 that contributed to the result. Uncheck to use less memory.", required = false)
     protected boolean generateContributionImages;
 
     @Parameter(type = ItemIO.OUTPUT)
     protected Dataset ContributionOf1, ContributionOf2;
 
-    @Parameter(type = ItemIO.OUTPUT, label = "CC Results")
+    @Parameter(type = ItemIO.OUTPUT, label = "Correlogram data")
     protected Table<org.scijava.table.Column<Double>, Double> resultsTable;
 
     //region Time-lapse specific variables for Gaussian fit
@@ -77,6 +76,8 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
         if (generateContributionImages) {
             initializeContributionImages();
             maxStatus += dataset1.getFrames();
+        } else if (showIntermediates) {
+
         }
     }
 

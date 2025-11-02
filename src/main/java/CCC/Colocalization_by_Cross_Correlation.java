@@ -48,7 +48,11 @@ public class Colocalization_by_Cross_Correlation extends Abstract_CCC_gaussian {
     @Override
     public void run(){
         maxStatus = 5;
-        initializePlugin(new String[]{"Original CC result", "Subtracted CC result", "Gaussian-modified CC result"});
+        if(generateContributionImages)
+            initializePlugin(new String[]{"Original CC result", "Subtracted CC result", "Gaussian-modified CC result"});
+        else initializePlugin(new String[]{"Original CC result", "Subtracted CC result"});
+
+
 
         //region Single frame analysis
         if(dataset1.getFrames() == 1) {
@@ -64,7 +68,7 @@ public class Colocalization_by_Cross_Correlation extends Abstract_CCC_gaussian {
                 e.printStackTrace();
             }
 
-            generatePlots();
+            generateCorrelogram();
             generateFullCorrelationTable();
         }
         //endregion

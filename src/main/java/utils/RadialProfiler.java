@@ -29,12 +29,7 @@ import net.imglib2.parallel.Parallelization;
 import net.imglib2.parallel.TaskExecutor;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
-import org.apache.commons.math3.analysis.function.Gaussian;
-import org.apache.commons.math3.exception.TooManyIterationsException;
-import org.apache.commons.math3.fitting.GaussianCurveFitter;
-import org.apache.commons.math3.fitting.WeightedObservedPoints;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 

@@ -1,5 +1,10 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
+ *  This work is modified from the Apache Software Foundation (ASF) Gaussian class
+ * for use with the Colocalization by Cross-Correlation (CCC) Fiji plugin.
+ * The ASF copyright notice can be found below, and the full text license is
+ * included with this distribution of CCC.
+ *
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,8 +22,6 @@
 
 package utils;
 
-import java.util.Arrays;
-
 import org.apache.commons.math3.analysis.FunctionUtils;
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.DifferentiableUnivariateFunction;
@@ -30,7 +33,6 @@ import org.apache.commons.math3.exception.NullArgumentException;
 import org.apache.commons.math3.exception.DimensionMismatchException;
 import org.apache.commons.math3.analysis.function.Gaussian;
 import org.apache.commons.math3.util.FastMath;
-import org.apache.commons.math3.util.Precision;
 
 /**
  * <a href="http://en.wikipedia.org/wiki/Gaussian_function">

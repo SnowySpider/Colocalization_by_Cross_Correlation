@@ -34,7 +34,6 @@ import net.imglib2.parallel.TaskExecutor;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.view.Views;
-import org.apache.commons.math3.analysis.function.Gaussian;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

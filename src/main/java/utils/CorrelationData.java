@@ -21,7 +21,6 @@
  */
 package utils;
 
-import org.apache.commons.math3.exception.TooManyIterationsException;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.apache.commons.math3.analysis.function.Gaussian;
 
@@ -35,7 +34,7 @@ public class CorrelationData {
 
     public nGaussian gaussians = null;
 
-    //3 Parameter double: Normalization, Mean, Sigma
+    //Triplets ordered in: Normalization (Height), Mean, Sigma
     protected double[] gaussFitParameters;
 
     protected Double[] confidence;

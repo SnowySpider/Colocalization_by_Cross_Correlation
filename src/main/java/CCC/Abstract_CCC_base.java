@@ -42,17 +42,30 @@ import net.imglib2.view.Views;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.scijava.ItemIO;
+import org.scijava.ItemVisibility;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
+import org.scijava.command.DynamicCommand;
+import org.scijava.command.InteractiveCommand;
+import org.scijava.display.DisplayService;
+import org.scijava.display.event.DisplayUpdatedEvent;
+import org.scijava.event.EventService;
+import org.scijava.event.SciJavaEvent;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
+import org.scijava.module.MethodCallException;
+import org.scijava.module.MutableModuleItem;
+import org.scijava.module.event.ModuleEvent;
 import org.scijava.plot.*;
 import org.scijava.plugin.Parameter;
+import org.scijava.plugin.PluginService;
 import org.scijava.table.Table;
 import org.scijava.table.Tables;
 import org.scijava.ui.UIService;
 import org.scijava.ui.swing.viewer.plot.jfreechart.XYPlotConverter;
+import org.scijava.ui.swing.widget.SwingInputPanel;
 import org.scijava.util.ColorRGB;
+import org.scijava.widget.WidgetService;
 import utils.RadialProfiler;
 import utils.ErrorChecking;
 
@@ -71,8 +84,7 @@ import static java.util.stream.Collectors.toList;
  * @author Andrew McCall
  */
 
-//@Plugin(type = Command.class, headless = true, menuPath = "Analyze>Colocalization>Colocalization by Cross Correlation")
-public abstract class Abstract_CCC_base implements Command{
+public abstract class Abstract_CCC_base extends DynamicCommand {
 
     @Parameter
     protected LogService logService;
@@ -104,16 +116,16 @@ public abstract class Abstract_CCC_base implements Command{
     @Parameter(label = "Image 2: ", persist = false)
     protected Dataset dataset2;
 
-    @Parameter(label = "No mask (not recommended)?", description = "Only check this if your image has no region of interest for analysis purposes.", callback = "maskCallback")
+    @Parameter(label = "No mask (not recommended)?", description = "Only check this if your image has no region of interest for analysis purposes.", required = false)
     protected boolean maskAbsent;
 
     @Parameter(label = "Mask: ", description = "The mask used to define the low-spatial frequency component. This is important, more details at: imagej.net/plugins/colocalization-by-cross-correlation", required = false, persist = false)
     protected Dataset maskDataset;
 
-    @Parameter(label = "Significant digits: ")
+    @Parameter(label = "Significant digits: ", required = false)
     protected int significantDigits;
 
-    @Parameter(label = "Show intermediate images? ", description = "Shows images of numerous steps throughout the algorithm. Uncheck to use less memory. More details at: imagej.net/plugins/colocalization-by-cross-correlation")
+    @Parameter(label = "Show intermediate images? ", description = "Shows images of numerous steps throughout the algorithm. Uncheck to use less memory. More details at: imagej.net/plugins/colocalization-by-cross-correlation", required = false)
     protected boolean showIntermediates;
 
     @Parameter(label = "Output directory (leave blank for none):", description = "The directory to automatically save all generated output, including the intermediate images if the \"Show Intermediates\" box is checked", required = false, style="directory")
@@ -154,8 +166,14 @@ public abstract class Abstract_CCC_base implements Command{
     protected RandomAccessibleInterval [] intermediatesViewsPasser;
     //endregion
 
-    protected Abstract_CCC_base() {
-    }
+//    protected void maskInit(){
+//        Dataset empty = datasetService.create(new FloatType(), new long[]{1, 1}, "Null (not recommended)", new AxisType[]{Axes.X, Axes.Y});
+//        MutableModuleItem<Dataset> maskDatasetItem = getInfo().getMutableInput("maskDataset", Dataset.class);
+//
+//        List<Dataset> choices = maskDatasetItem.getChoices();
+//        choices.add(empty);
+//        maskDatasetItem.setChoices(choices);
+//    }
 
     protected void finish() {
         statusService.showStatus(maxStatus, maxStatus,statusBase + "CCC Finished!");
@@ -163,6 +181,14 @@ public abstract class Abstract_CCC_base implements Command{
 
     protected void initializePlugin(String[] intermediateNames){
         statusService.showStatus("Initializing plugin data");
+
+        if(maskDataset.getName() == "Null (not recommended)"){
+            maskAbsent = true;
+        }
+
+        if(!maskAbsent && maskDataset == null){
+            throw new InputMismatchException("Mask dataset missing");
+        }
 
         String version = "2.3.0";
         summary = "Results generated using CCC version " + version + "\n"
@@ -266,7 +292,7 @@ public abstract class Abstract_CCC_base implements Command{
         return Views.dropSingletonDimensions(Views.interval(in, minDims, maxDims));
     }
 
-    protected void generatePlots(){
+    protected void generateCorrelogram(){
 
         SeriesStyle oCorrStyle = plotService.newSeriesStyle(ColorRGB.fromHTMLColor("blue"), LineStyle.NONE, MarkerStyle.CIRCLE);
         SeriesStyle sCorrStyle = plotService.newSeriesStyle(ColorRGB.fromHTMLColor("green"), LineStyle.NONE, MarkerStyle.CIRCLE);
@@ -276,7 +302,7 @@ public abstract class Abstract_CCC_base implements Command{
 
         plot.xAxis().setLabel("Distance (" + getUnitType() + ")");
         plot.yAxis().setLabel("Cross correlation");
-        plot.setTitle("Correlation of images");
+        plot.setTitle("Correlogram");
 
         if(radialProfiler.correlationData.hasGaussians()) {
             XYSeries gaussData = plot.addXYSeries();

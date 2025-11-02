@@ -47,7 +47,9 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
     @Override
     public void run(){
         maxStatus = 4;
-        initializePlugin(new String[]{"Subtracted CC result", "Gaussian-modified CC result"});
+        if(generateContributionImages)
+            initializePlugin(new String[]{"Subtracted CC result", "Gaussian-modified CC result"});
+        else initializePlugin(new String[]{"Subtracted CC result"});
 
         //region Single frame analysis
         if(dataset1.getFrames() == 1) {
@@ -63,7 +65,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            generatePlots();
+            generateCorrelogram();
             generateFullCorrelationTable();
         }
         //endregion

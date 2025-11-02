@@ -1,4 +1,10 @@
 /*
+ *  This work is modified from the Apache Software Foundation (ASF)
+ * GaussianCurveFitter class for use with the Colocalization by
+ * Cross-Correlation (CCC) Fiji plugin. The ASF copyright notice can
+ * be found below, and the full text license is included with this
+ * distribution of CCC.
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,7 +33,6 @@ import org.apache.commons.math3.fitting.WeightedObservedPoint;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.linear.DiagonalMatrix;
-import org.apache.commons.math3.util.FastMath;
 
 /**
  * Fits points to a {@link
@@ -207,21 +212,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
      */
     public static class ParameterGuesser {
         //Every triplet is ordered Normalization factor, mean and Standard Deviation
-        //Evidently, every single parameter must be listed out here. Not sure how to do this.
         private double[] guess;
-
-        //private int curveCount;
-
-
-
-//        /** Normalization factor. */
-//        private final double norm;
-//        /** Mean. */
-//        private final double mean;
-//        /** Standard deviation. */
-//        private final double sigma;
-//
-
 
         /**
          * Constructs instance with the specified observed points.
@@ -328,10 +319,6 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
                 int offset = i * 3;
                 double [] output = null;
 
-                /*This is going to take forever and seems crazy, but the basic method I tried first would not
-                work in every case. Specifically, it would not work with overlapping Gaussians with a small+narrow
-                 on top of a big+broad.
-                 */
                 try{
                     output =  GaussianCurveFitter.create().withMaxIterations(50).fit(Arrays.asList(workingList));
                 }

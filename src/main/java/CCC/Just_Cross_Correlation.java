@@ -64,7 +64,7 @@ public class Just_Cross_Correlation extends Abstract_CCC_base {
                 e.printStackTrace();
             }
 
-            generatePlots();
+            generateCorrelogram();
             generateFullCorrelationTable();
         }
         //endregion

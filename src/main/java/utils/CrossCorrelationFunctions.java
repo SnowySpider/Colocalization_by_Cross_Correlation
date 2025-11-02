@@ -58,9 +58,8 @@ public class CrossCorrelationFunctions<R extends RealType<R>, F extends FloatTyp
     }
 
     public void calculateCC(RandomAccessibleInterval<F> output){
-
+        //todo: Monitor ops.filter().correlate() and replace FFTconvolution when the large-image bug is fixed
         //OutOfBoundsFactory zeroBounds = new OutOfBoundsConstantValueFactory<>(0.0);
-
         //ops.filter().correlate(oCorr, img1, img2, img1.dimensionsAsLongArray(), zeroBounds, zeroBounds);
 
         fdMath.setComputeComplexConjugate(true);
@@ -106,12 +105,9 @@ public class CrossCorrelationFunctions<R extends RealType<R>, F extends FloatTyp
         Contributions.calculateContributionImages(img1, img2, ccImage, img1contribution, img2contribution, fdMath);
     }
 
-
-                                                //made this to quickly and easily test different extension methods for correlation
+    //made this to quickly and easily test different extension methods for correlation
     private RandomAccessible extendImage(RandomAccessibleInterval<FloatType> in){
-        //return Views.extendMirrorSingle(in); //this is the default method, it causes major issues when there is a flat uniform background (even small numbers) over the whole image with no mask
-        //return Views.extendValue(in, ops.stats().median(in).getRealDouble()); //this can cause issues similar to extendMirrorSingle, though slightly less often
-        return Views.extendZero(in); //this method seems to be the best for cross-correlation. The original cross-correlation can look terrible with flat background or noise (looks like a pyramid), but this is subtracted out. This method also makes the most intuitive sense, as we don't want to correlate beyond the borders of the image.
+        return Views.extendZero(in);
     }
 
     private double getVoxelVolume(double [] scale){
@@ -121,10 +117,4 @@ public class CrossCorrelationFunctions<R extends RealType<R>, F extends FloatTyp
         }
         return volume;
     }
-
-    //troubleshooting method for showing images at key points
-    /*    private void showScaledImg(Img input, String title){
-        uiService.show(title, input);
-    }*/
-
 }
