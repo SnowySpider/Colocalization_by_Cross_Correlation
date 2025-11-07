@@ -64,14 +64,12 @@ import org.apache.commons.math3.linear.DiagonalMatrix;
  *   double[] parameters = GaussianCurveFitter.create().fit(obs.toList());
  * </pre>
  *
- * </p>
  *
  * @since 3.3
  */
 public class nGaussianCurveFitter extends AbstractCurveFitter {
     /** Parametric function to be fitted. */
     private static final nGaussian.Parametric FUNCTION = new nGaussian.Parametric() {
-        /** {@inheritDoc} */
         @Override
         public double value(double x, double ... p) {
             double v = Double.POSITIVE_INFINITY;
@@ -83,7 +81,6 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
             return v;
         }
 
-        /** {@inheritDoc} */
         @Override
         public double[] gradient(double x, double ... p) {
             double[] v = { Double.POSITIVE_INFINITY,
@@ -167,7 +164,6 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
                 newMaxIter);
     }
 
-    /** {@inheritDoc} */
     @Override
     protected LeastSquaresProblem getProblem(Collection<WeightedObservedPoint> observations) {
 
@@ -205,8 +201,8 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
     }
 
     /**
-     * Guesses the parameters {@code norm}, {@code mean}, and {@code sigma}
-     * of a {@link org.apache.commons.math3.analysis.function.Gaussian.Parametric}
+     * Guesses the parameters norm, mean, and sigma
+     * of a nGaussian.Parametric
      * based on the specified observed points.
      */
     public static class ParameterGuesser {
@@ -218,7 +214,7 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
          *
          * @param observations Observed points from which to guess the
          * parameters of the Gaussian.
-         * @throws NullArgumentException if {@code observations} is
+         * @throws NullArgumentException if observations is
          * {@code null}.
          * @throws NumberIsTooSmallException if there are less than 3
          * observations.
@@ -262,7 +258,6 @@ public class nGaussianCurveFitter extends AbstractCurveFitter {
             final List<WeightedObservedPoint> observations = new ArrayList<WeightedObservedPoint>(unsorted);
 
             final Comparator<WeightedObservedPoint> cmp = new Comparator<WeightedObservedPoint>() {
-                /** {@inheritDoc} */
                 public int compare(WeightedObservedPoint p1,
                                    WeightedObservedPoint p2) {
                     if (p1 == null && p2 == null) {
