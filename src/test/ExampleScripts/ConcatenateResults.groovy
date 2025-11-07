@@ -23,7 +23,8 @@ import io.scif.services.DatasetIOService;
 import net.imagej.axis.Axes;
 import net.imagej.Dataset;
 import net.imglib2.FinalInterval;
-import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.type.numeric.real.FloatType
+import org.scijava.io.IOService;
 import org.scijava.module.ModuleInfo;
 import org.scijava.table.Table;
 import org.scijava.table.Tables;
@@ -40,11 +41,13 @@ import com.google.common.collect.Maps;
 
 
 #@ File[] (label="Select images to process", style="files") fileList
+#@ File (label="Results output directory", style="directory", persist=true) outputDir
 #@ UIService uiService
 #@ OpService ops
 #@ ModuleService moduleService
 #@ DatasetIOService datasetioService
 #@ DatasetService datasetService
+#@ IOService ioService
 
 
 Table concatenatedTable;
@@ -117,30 +120,35 @@ for (int i = 0; i < fileList.length; i++) {
     //mask.setName(image.getName() + "-Huang mask");
 
     Table tableOut = moduleService.run(ccc, false,
-            "dataset1", ch1,
-            "dataset2",ch2,
-            "maskAbsent", false,
-            "maskDataset",mask,
-            "significantDigits", 4,
-            "generateContributionImages",false,
-            "showIntermediates",false ,
-            "saveFolder", ""
+            "dataset1", ch1, //required parameter
+            "dataset2",ch2, //required parameter
+            "maskDataset",mask, //optional parameter (but highly recommended), default=full image
+            "significantDigits", 4, //optional parameter, default=0
+            "generateContributionImages",false, //optional parameter, default = false
+            "showIntermediates",false , //optional parameter, default = false
+            "numGaussians2Fit", 2, //optional parameter, default=1
+            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName() + File.separator //optional parameter, default = no saving
     ).get().getOutput("resultsTable");
 
     imageNames.add(floatImage.getName());
     concatenatedList.add(
             Maps.newHashMap(
-                    ImmutableMap.of("Mean", tableOut.get(0,0),
-                            "StDev", tableOut.get(0,1),
-                            "Confidence", tableOut.get(0,2),
-                            "R-Squared", tableOut.get(0,3),
-                            "Gaussian Height", tableOut.get(0,4)
+                    ImmutableMap.of("Mean 1", tableOut.get(0,0),
+                            "StDev 1", tableOut.get(0,1),
+                            "Gaussian Height 1", tableOut.get(0,2),
+                            "Confidence 1", tableOut.get(0,3),
+                            "Mean 2", tableOut.get(0,4),
+                            "StDev 2", tableOut.get(0,5),
+                            "Gaussian Height 2", tableOut.get(0,6),
+                            "Confidence 2", tableOut.get(0,7),
+                            "R-Squared", tableOut.get(0,8) //This would be row 4 on a single-Gaussian fit
                     )
             )
     );
 
+    //Placing this in the loops saves after each file, in event of a crash
+    concatenatedTable = Tables.wrap(concatenatedList, imageNames);
+    ioService.save(concatenatedTable, outputDir.getPath() + File.separator + "ConcatenatedTable.csv");
 }
-
-concatenatedTable = Tables.wrap(concatenatedList, imageNames);
 
 uiService.show(concatenatedTable);

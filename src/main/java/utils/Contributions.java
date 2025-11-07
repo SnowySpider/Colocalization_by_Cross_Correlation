@@ -34,15 +34,15 @@ import net.imglib2.parallel.TaskExecutor;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.complex.ComplexFloatType;
 import net.imglib2.view.Views;
-import org.apache.commons.math3.analysis.function.Gaussian;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 
 public class Contributions {
 
-    public static void generateGaussianModifiedCCImage(RandomAccessibleInterval<? extends RealType> ccImage, RandomAccessibleInterval <? extends RealType> output, Gaussian gaussian, double [] gaussFitParameters, double [] scale){
+    public static void generateGaussianModifiedCCImage(RandomAccessibleInterval<? extends RealType> ccImage, RandomAccessibleInterval <? extends RealType> output, CorrelationData correlationData, double [] scale){
         //get image dimensions and center
         int nDims = ccImage.numDimensions();
         if(nDims != scale.length)
@@ -56,6 +56,9 @@ public class Contributions {
             center[i] = ((double)dims[i]-1.0)/2;
         }
 
+        nGaussian gaussians = correlationData.gaussians;
+
+        double normalization = IntStream.range(0, correlationData.curveCount).mapToDouble(correlationData::getGaussianNorm).sum();
 
         Parallelization.runMultiThreaded( () -> {
             TaskExecutor taskExecutor = Parallelization.getTaskExecutor();
@@ -73,7 +76,7 @@ public class Contributions {
                         LscaledSq += Math.pow((looper.getDoublePosition(i)-center[i])*scale[i],2);
                     }
                     double Ldistance = Math.sqrt(LscaledSq);
-                    outLooper.get().setReal(looper.get().getRealDouble()*(gaussian.value(Ldistance)/gaussFitParameters[0]));
+                    outLooper.get().setReal(looper.get().getRealDouble()*(gaussians.value(Ldistance)/normalization));
                     //outLooper.get().setReal(looper.get().getRealDouble()*radialProfile.gaussCurveMap.get(radialProfile.getBD(Ldistance).doubleValue()));
                 }
             });

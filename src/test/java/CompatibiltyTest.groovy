@@ -19,12 +19,14 @@
  * <http://www.gnu.org/licenses/gpl-3.0.html>.
  * #L%
  */
+
 import CCC.CCC_No_Confidence
 import CCC.Colocalization_by_Cross_Correlation
 import CCC.Just_Cross_Correlation
 import net.imagej.Dataset
 import net.imagej.ImageJ
 import net.imagej.axis.Axes
+import net.imglib2.FinalInterval
 import net.imglib2.view.Views
 import org.scijava.command.CommandInfo
 import org.scijava.module.ModuleInfo
@@ -55,58 +57,75 @@ ch1.setName("ch1");
 ch2.setName("ch2");
 mask.setName("mask");
 
-ArgumentsGenerator argumentsGenerator = new ArgumentsGenerator(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/2D_8-bit/JCC"));
+ArgumentsGenerator argumentsGenerator = new ArgumentsGenerator(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/2D_8-bit/JCC"));
 argumentsGenerator.jccArguments.each{ argumentArray ->
     ij.module().run(commands[2], scijavaProcess, argumentArray).get(); //note: using .get() here forces the script to wait for the results. Running multiple commands in parallel can cause memory issues
 }
-argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/2D_8-bit/CCC"));
+argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/2D_8-bit/CCC"));
 argumentsGenerator.gaussArguments.each { argumentArray ->
     ij.module().run(commands[0], scijavaProcess, argumentArray).get();
 }
-argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/2D_8-bit/NoCon"));
+argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/2D_8-bit/NoCon"));
 argumentsGenerator.gaussArguments.each { argumentArray ->
     ij.module().run(commands[1], scijavaProcess, argumentArray).get();
 }
 //endregion
 
 //region: 3D 16-bit image test
-Dataset corti = ij.scifio().datasetIO().open("src/test/resources/organ-of-corti.tif");
+Dataset corti = ij.scifio().datasetIO().open("C:/Users/andmc/IdeaProjects/CCC/src/test/resources/organ-of-corti.tif");
 channelAxis = corti.dimensionIndex(Axes.CHANNEL);
 ch1 = ij.dataset().create(Views.hyperSlice(corti,channelAxis, 0));
 ch2 = ij.dataset().create(Views.hyperSlice(corti,channelAxis, 1));
 mask = ij.dataset().create(ij.op().threshold().huang(ij.op().filter().gauss(ch1, 10)));
 
-argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/3D_16-bit/JCC"));
+argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/3D_16-bit/JCC"));
 argumentsGenerator.jccArguments.each { argumentArray ->
     ij.module().run(commands[2], scijavaProcess, argumentArray).get();
 }
-argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/3D_16-bit/CCC"));
+argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/3D_16-bit/CCC"));
 argumentsGenerator.gaussArguments.each { argumentArray ->
     ij.module().run(commands[0], scijavaProcess, argumentArray).get();
 }
-argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/3D_16-bit/NoCon"));
+argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/3D_16-bit/NoCon"));
 argumentsGenerator.gaussArguments.each { argumentArray ->
     ij.module().run(commands[1], scijavaProcess, argumentArray).get();
 }
 
 //endregion
 
+
+ij.dispose();
+return;
+
+//mitosis is currently not working, seems to not be opening as 5D image.
+
 //region: 4D 16-bit test
 Dataset mitosis = ij.scifio().datasetIO().open("http://imagej.net/images/mitosis.tif");
 channelAxis = mitosis.dimensionIndex(Axes.CHANNEL);
-ch1 = ij.dataset().create(Views.hyperSlice(mitosis,channelAxis, 0));
-ch2 = ij.dataset().create(Views.hyperSlice(mitosis,channelAxis, 1));
+
+long[] min = new long[mitosis.numDimensions()];
+long[] max = new long[mitosis.numDimensions()];
+for(int d = 0; d < min.length; ++d){
+    min[d] = mitosis.min(d);
+    max[d] = mitosis.max(d);
+}
+min[channelAxis] = 0;
+max[channelAxis] = 0;
+ch1 = ij.dataset().create(ij.op().transform().crop(mitosis,new FinalInterval(min, max), true));
+min[channelAxis] = 1;
+max[channelAxis] = 1;
+ch2 = ij.dataset().create(ij.op().transform().crop(mitosis,new FinalInterval(min, max), true));
 mask = ij.dataset().create(ij.op().threshold().huang(ij.op().filter().gauss(ch1, 5)));
 
-    argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/4D_16-bit/JCC"));
+    argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/4D_16-bit/JCC"));
     argumentsGenerator.jccArguments.each { argumentArray ->
         ij.module().run(commands[2], scijavaProcess, argumentArray).get();
     }
-    argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/4D_16-bit/CCC"));
+    argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/4D_16-bit/CCC"));
     argumentsGenerator.gaussArguments.each { argumentArray ->
         ij.module().run(commands[0], scijavaProcess, argumentArray).get();
     }
-    argumentsGenerator.newArguments(ch1, ch2, mask, new File("src/test/testOutputs/Compatibility/4D_16-bit/NoCon"));
+    argumentsGenerator.newArguments(ch1, ch2, mask, new File("C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Compatibility/4D_16-bit/NoCon"));
     argumentsGenerator.gaussArguments.each { argumentArray ->
         ij.module().run(commands[1], scijavaProcess, argumentArray).get();
     }

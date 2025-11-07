@@ -29,7 +29,7 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.command.Command;
 import org.scijava.plugin.Plugin;
-import utils.CCfunctions;
+import utils.CrossCorrelationFunctions;
 import utils.RadialProfiler;
 
 
@@ -64,7 +64,7 @@ public class Just_Cross_Correlation extends Abstract_CCC_base {
                 e.printStackTrace();
             }
 
-            generatePlots();
+            generateCorrelogram();
             generateFullCorrelationTable();
         }
         //endregion
@@ -105,6 +105,7 @@ public class Just_Cross_Correlation extends Abstract_CCC_base {
         if(saveFolder != null && !saveFolder.getPath().equals("")){
             saveResultsToFolder();
         }
+        finish();
     }
 
     //made this to quickly and easily test different extension methods for correlation
@@ -117,7 +118,7 @@ public class Just_Cross_Correlation extends Abstract_CCC_base {
 
         statusService.showStatus(currentStatus++, maxStatus,statusBase + "Initializing data");
 
-        CCfunctions ccFunctions = new CCfunctions(img1, img2, imgMask, scale, imgFactory);
+        CrossCorrelationFunctions ccFunctions = new CrossCorrelationFunctions(img1, img2, imgMask, scale, imgFactory);
 
         statusService.showStatus(currentStatus++, maxStatus,statusBase + "Calculating cross-correlation");
 
