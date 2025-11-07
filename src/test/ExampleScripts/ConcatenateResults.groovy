@@ -133,11 +133,15 @@ for (int i = 0; i < fileList.length; i++) {
     imageNames.add(floatImage.getName());
     concatenatedList.add(
             Maps.newHashMap(
-                    ImmutableMap.of("Mean", tableOut.get(0,0),
-                            "StDev", tableOut.get(0,1),
-                            "Confidence", tableOut.get(0,2),
-                            "R-Squared", tableOut.get(0,3),
-                            "Gaussian Height", tableOut.get(0,4)
+                    ImmutableMap.of("Mean 1", tableOut.get(0,0),
+                            "StDev 1", tableOut.get(0,1),
+                            "Gaussian Height 1", tableOut.get(0,2),
+                            "Confidence 1", tableOut.get(0,3),
+                            "Mean 2", tableOut.get(0,4),
+                            "StDev 2", tableOut.get(0,5),
+                            "Gaussian Height 2", tableOut.get(0,6),
+                            "Confidence 2", tableOut.get(0,7),
+                            "R-Squared", tableOut.get(0,8) //This would be row 4 on a single-Gaussian fit
                     )
             )
     );
