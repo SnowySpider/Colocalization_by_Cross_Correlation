@@ -35,9 +35,8 @@ import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.linear.DiagonalMatrix;
 
 /**
- * Fits points to a {@link
- * nGaussian.Parametric function.
- * The {@link #withStartPoint(double[]) initial guess values} must be passed
+ * Fits points to a nGaussian.Parametric function.
+ * The withStartPoint(double[]) initial guess values must be passed
  * in the following order:
  * <ul>
  *  <li>Normalization</li>
@@ -64,6 +63,8 @@ import org.apache.commons.math3.linear.DiagonalMatrix;
  *   obs.add(4.08366408, 620014.0);
  *   double[] parameters = GaussianCurveFitter.create().fit(obs.toList());
  * </pre>
+ *
+ * </p>
  *
  * @since 3.3
  */
