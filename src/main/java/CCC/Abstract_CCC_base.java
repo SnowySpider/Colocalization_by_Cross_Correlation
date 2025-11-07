@@ -169,12 +169,8 @@ public abstract class Abstract_CCC_base extends DynamicCommand {
     protected void initializePlugin(String[] intermediateNames){
         statusService.showStatus("Initializing plugin data");
 
-        if(maskDataset.getName() == "Null (not recommended)"){
+        if(maskDataset == null){
             maskAbsent = true;
-        }
-
-        if(!maskAbsent && maskDataset == null){
-            throw new InputMismatchException("Mask dataset missing");
         }
 
         String version = "2.3.0";

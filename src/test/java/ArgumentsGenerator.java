@@ -38,13 +38,15 @@ public class ArgumentsGenerator {
     }
     public void newArguments(Dataset img1, Dataset img2, Dataset mask, File saveRoot){
         jccArguments = new ArrayList<>();
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", true).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder",new File("")).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", true).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File("")).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", false).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File("")).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", true).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"NoMaskNoOptions" + File.separator)).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", true).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"NoMaskWithOptions" + File.separator)).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", false).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"MaskNoOptions" + File.separator)).build()));
-        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskAbsent", false).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"MaskWithOptions" + File.separator)).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder",new File("")).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File("")).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File("")).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"NoMaskNoOptions" + File.separator)).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"NoMaskWithOptions" + File.separator)).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", false).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"MaskNoOptions" + File.separator)).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(8).put("dataset1", img1).put("dataset2", img2).put("maskDataset", mask).put("significantDigits", 4).put("showIntermediates", true).put("saveFolder", new File(saveRoot.getAbsolutePath() + File.separator +"MaskWithOptions" + File.separator)).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(2).put("dataset1", img1).put("dataset2", img2).build()));
+        jccArguments.add(Maps.newHashMap(ImmutableMap.<String,Object>builderWithExpectedSize(2).put("dataset1", img1).put("dataset2", img2).build()));
 
         gaussArguments = new ArrayList<>();
         jccArguments.forEach((argument) ->
@@ -56,6 +58,6 @@ public class ArgumentsGenerator {
         gaussArguments.get(4).put("generateContributionImages", true);
         gaussArguments.get(5).put("generateContributionImages", false);
         gaussArguments.get(6).put("generateContributionImages", true);
-
+        gaussArguments.get(8).put("generateContributionImages", true);
     }
 }

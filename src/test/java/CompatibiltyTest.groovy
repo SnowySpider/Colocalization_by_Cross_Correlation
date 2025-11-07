@@ -93,6 +93,12 @@ argumentsGenerator.gaussArguments.each { argumentArray ->
 
 //endregion
 
+
+ij.dispose();
+return;
+
+//mitosis is currently not working, seems to not be opening as 5D image.
+
 //region: 4D 16-bit test
 Dataset mitosis = ij.scifio().datasetIO().open("http://imagej.net/images/mitosis.tif");
 channelAxis = mitosis.dimensionIndex(Axes.CHANNEL);

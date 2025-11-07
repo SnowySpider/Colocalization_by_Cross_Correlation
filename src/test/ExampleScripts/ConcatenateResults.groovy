@@ -23,7 +23,8 @@ import io.scif.services.DatasetIOService;
 import net.imagej.axis.Axes;
 import net.imagej.Dataset;
 import net.imglib2.FinalInterval;
-import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.type.numeric.real.FloatType
+import org.scijava.io.IOService;
 import org.scijava.module.ModuleInfo;
 import org.scijava.table.Table;
 import org.scijava.table.Tables;
@@ -46,6 +47,7 @@ import com.google.common.collect.Maps;
 #@ ModuleService moduleService
 #@ DatasetIOService datasetioService
 #@ DatasetService datasetService
+#@ IOService ioService
 
 
 Table concatenatedTable;
@@ -118,14 +120,14 @@ for (int i = 0; i < fileList.length; i++) {
     //mask.setName(image.getName() + "-Huang mask");
 
     Table tableOut = moduleService.run(ccc, false,
-            "dataset1", ch1,
-            "dataset2",ch2,
-            "maskAbsent", false,
-            "maskDataset",mask,
-            "significantDigits", 4,
-            "generateContributionImages",false,
-            "showIntermediates",false ,
-            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName() + File.separator
+            "dataset1", ch1, //required parameter
+            "dataset2",ch2, //required parameter
+            "maskDataset",mask, //optional parameter (but highly recommended), default=full image
+            "significantDigits", 4, //optional parameter, default=0
+            "generateContributionImages",false, //optional parameter, default = false
+            "showIntermediates",false , //optional parameter, default = false
+            "numGaussians2Fit", 2, //optional parameter, default=1
+            "saveFolder", outputDir.getPath() + File.separator + originalImage.getName() + File.separator //optional parameter, default = no saving
     ).get().getOutput("resultsTable");
 
     imageNames.add(floatImage.getName());
@@ -140,8 +142,9 @@ for (int i = 0; i < fileList.length; i++) {
             )
     );
 
+    //Placing this in the loops saves after each file, in event of a crash
+    concatenatedTable = Tables.wrap(concatenatedList, imageNames);
+    ioService.save(concatenatedTable, outputDir.getPath() + File.separator + "ConcatenatedTable.csv");
 }
-
-concatenatedTable = Tables.wrap(concatenatedList, imageNames);
 
 uiService.show(concatenatedTable);

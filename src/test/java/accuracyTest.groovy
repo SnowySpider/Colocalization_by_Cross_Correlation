@@ -36,7 +36,7 @@ Correlated_Pairs correlated_pairs = new Correlated_Pairs(ij, "C:/Users/andmc/Ide
 
 correlated_pairs.generateCorrelatedImages(512, 128, 15, 50, 0);
 
-Table outputs = ij.module().run(originalCCCinfo, true, "dataset1", correlated_pairs.paired1, "dataset2", correlated_pairs.paired2, "saveFolder", "src/test/testOutputs/Accuracy").get().getOutput("resultsTable");
+Table outputs = ij.module().run(originalCCCinfo, true, "dataset1", correlated_pairs.paired1, "dataset2", correlated_pairs.paired2, "saveFolder", "C:/Users/andmc/IdeaProjects/CCC/src/test/testOutputs/Accuracy").get().getOutput("resultsTable");
 println((outputs.get(0,0)/15) *100 + "% accuracy\n");
 
 ij.dispose();

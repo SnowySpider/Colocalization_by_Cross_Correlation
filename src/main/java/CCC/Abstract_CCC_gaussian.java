@@ -50,6 +50,7 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
 
     @Parameter(label = "Number of Gaussians to fit:", description = "Values > 1 fit a multi-term sum of Gaussians curve to the data", required=false)
     protected int numGaussians2Fit;
+
     @Parameter(label = "Generate contribution images?", description = "Generates images that highlight the signal from Image 1 and Image 2 that contributed to the result. Uncheck to use less memory.", required = false)
     protected boolean generateContributionImages;
 
@@ -102,7 +103,7 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
         }
     }
 
-    protected void generateContributionImages(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval <FloatType> img2, Img<FloatType> subtracted, RandomAccessibleInterval <R> gaussianCorrelogramOutput, final RandomAccessibleInterval <R> contribution1, final RandomAccessibleInterval <R> contribution2){
+    protected void generateContributionImages(RandomAccessibleInterval <FloatType> img1, RandomAccessibleInterval <FloatType> img2, Img<FloatType> subtracted, RandomAccessibleInterval <R> gaussianCCimageOutput, final RandomAccessibleInterval <R> contribution1, final RandomAccessibleInterval <R> contribution2){
         statusService.showStatus(currentStatus++, maxStatus,statusBase + "Determining channel contributions");
         //gaussModifiedCorr = imgFactory.create(img1);
         Img<FloatType> gaussModifiedCorr = ops.create().img(img1, new FloatType());
@@ -110,7 +111,7 @@ public abstract class Abstract_CCC_gaussian <R extends RealType<R>, F extends Fl
         ccFunctions.generateGaussianModifiedCCImage(subtracted, gaussModifiedCorr, radialProfiler.correlationData);
 
         if(showIntermediates){
-            LoopBuilder.setImages(gaussianCorrelogramOutput, gaussModifiedCorr).multiThreaded().forEachPixel((a, b) -> a.setReal(b.get()));
+            LoopBuilder.setImages(gaussianCCimageOutput, gaussModifiedCorr).multiThreaded().forEachPixel((a, b) -> a.setReal(b.get()));
         }
 
         ccFunctions.calculateContributionImages(img1, img2, gaussModifiedCorr, contribution1, contribution2);

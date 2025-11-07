@@ -150,7 +150,7 @@ public class Colocalization_by_Cross_Correlation extends Abstract_CCC_gaussian {
         fitGaussianCurves();
 
         if(generateContributionImages) {
-            generateContributionImages(img1, img2, subtracted, localIntermediates[2], contribution1,contribution2);
+            generateContributionImages(img1, img2, subtracted, localIntermediates == null ? null : localIntermediates[2], contribution1,contribution2);
         }
     }
 }

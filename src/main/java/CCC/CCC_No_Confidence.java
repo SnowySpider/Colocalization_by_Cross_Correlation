@@ -139,7 +139,7 @@ public class CCC_No_Confidence extends Abstract_CCC_gaussian {
         fitGaussianCurves();
 
         if(generateContributionImages) {
-            generateContributionImages(img1, img2, subtracted, localIntermediates[1], contribution1,contribution2);
+            generateContributionImages(img1, img2, subtracted, localIntermediates == null ? null : localIntermediates[1], contribution1,contribution2);
         }
     }
 }
