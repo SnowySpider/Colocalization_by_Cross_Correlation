@@ -49,8 +49,11 @@ public class CorrelationData {
     public boolean hasConfidence(){return confidence != null;}
     public double getConfidence(int index){return confidence[index];}
     public double getRSquared(){return rSquared;}
-    public boolean hasGaussians(){return gaussians.getCount() > 0;}
+    public boolean hasGaussians(){return gaussians != null && gaussians.getCount() > 0;}
 
+    public CorrelationData(){
+        this(1);
+    }
     public CorrelationData(int curveFitCount){
         curveCount = curveFitCount;
     }
